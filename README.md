@@ -1,7 +1,16 @@
 # wpfvs
 
-links
------
+## todo
+
+- change max_score to be compatible with gym env
+
+- cleanup src
+
+- comment
+
+- make sure project works for every gym environment
+
+## links
 
 - **[openai gym](http://gym.openai.com)** for training a RL agent.
 
