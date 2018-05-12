@@ -1,5 +1,19 @@
 # wpfvs
 
+## execute
+
+1. install dependencies:
+  
+  - <code>pip install tensorflow</code>
+
+  - <code>pip install keras</code>
+  
+  - <code>pip install gym</code>
+
+2. execute:
+
+  <code>python3 run.py</code> 
+
 ## todo
 
 - change max_score to be compatible with gym env
