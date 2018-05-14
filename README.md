@@ -10,19 +10,9 @@
   
   - <code>pip install gym</code>
 
-2. execute:
-
-  <code>python3 run.py</code> 
+2. execute: <code>python3 run.py</code> 
 
 ## todo
-
-- change max_score to be compatible with gym env
-
-- cleanup src
-
-- comment
-
-- make sure project works for every gym environment
 
 ## links
 
@@ -38,3 +28,5 @@ for a distributed system.
 - **[multi-agent system](https://en.wikipedia.org/wiki/Multi-agent_system)** theoretical model of something we could build.
 
 - **[deep q learning](http://rll.berkeley.edu/deeprlcourse/f17docs/lecture_7_advanced_q_learning.pdf)** holy sh\*t mathematical but basically describes how our agent works and how to optimize it further.
+
+- **[time to beat LunarLander-v2](https://gym.openai.com/evaluations/eval_FbKq5MxAS9GlvB7W6ioJkg/)** 22 minutes.
