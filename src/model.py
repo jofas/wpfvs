@@ -4,38 +4,41 @@ from keras.layers import Dense, Dropout
 
 import numpy as np
 
-from .generate import generate_training_data
+from .bench import Bench
 
 # def neural_network_model {{{
-def neural_network_model(input_size):
+def neural_network_model(input_size,output_size,test):
 
-    # neural net foundation we use {{{
-    model = Sequential([
-        Dense(128, activation='relu',input_dim=input_size),
-        Dropout(0.5),
-        Dense(256,activation='relu'),
-        Dropout(0.5),
-        Dense(512,activation='relu'),
-        Dropout(0.5),
-        Dense(256,activation='relu'),
-        Dropout(0.5),
-        Dense(128,activation='relu'),
-        Dropout(0.5),
-        Dense(2,activation='softmax'),
-    ])
-    # }}}
-
-    # smaller net for faster testing {{{
-    '''
-    model = Sequential([
-        Dense(64, activation='relu',input_dim=input_size),
-        #Dropout(0.8),
-        Dense(64,activation='relu'),
-        #Dropout(0.8),
-        Dense(2,activation='softmax'),
-    ])
-    '''
-    # }}}
+    if not test:
+        # neural net foundation we use {{{
+        model = Sequential([
+            Dense(128, activation='relu',input_dim=input_size),
+            Dropout(0.5),
+            Dense(256,activation='relu'),
+            Dropout(0.5),
+            Dense(512,activation='relu'),
+            Dropout(0.5),
+            Dense(512,activation='relu'),
+            Dropout(0.5),
+            Dense(256,activation='relu'),
+            Dropout(0.5),
+            Dense(128,activation='relu'),
+            Dropout(0.5),
+            Dense(output_size,activation='softmax'),
+        ])
+        # }}}
+    else:
+        # smaller net for faster testing {{{
+        #'''
+        model = Sequential([
+            Dense(64, activation='relu',input_dim=input_size),
+            #Dropout(0.8),
+            Dense(64,activation='relu'),
+            #Dropout(0.8),
+            Dense(2,activation='softmax'),
+        ])
+        #'''
+        # }}}
 
     # meta we need for training
     model.compile(
@@ -48,7 +51,8 @@ def neural_network_model(input_size):
 # }}}
 
 # def train_model {{{
-def train_model(data,model=False):
+@Bench
+def train_model(data,test=False,model=False):
 
     # parse the training data to an
     # input format keras can use for
@@ -59,7 +63,9 @@ def train_model(data,model=False):
     if not model:
         # initialize model
         model = neural_network_model(
-            input_size = len(X[0])
+            input_size = len(X[0]),
+            output_size = len(y[0]),
+            test = test
         )
 
     # actual training
@@ -75,7 +81,7 @@ def train_model(data,model=False):
 # one game is played and the score
 # is returned.
 #
-def test_model(env,model,dim,steps):
+def test_model(env,model,dim,steps,visual):
 
     choices = []
     score = 0
@@ -87,7 +93,8 @@ def test_model(env,model,dim,steps):
     env.reset()
 
     for _ in range(steps):
-        env.render()
+        if visual:
+            env.render()
 
         # predict action
         action = np.argmax(
@@ -107,13 +114,7 @@ def test_model(env,model,dim,steps):
             env.reset()
             break
 
-    # score and statistics for the console {{{
     print('Score: ', score)
-    print('choice 1:{}  choice 0:{}'.format(
-        choices.count(1)/len(choices),
-        choices.count(0)/len(choices)
-    ))
-    # }}}
 
     return score
 # }}}

@@ -1,25 +1,47 @@
 import numpy as np
 import random
+import math
 
 from statistics import median, mean
 from collections import Counter
 
-# def generate_training_data {{{
+from .bench import Bench
+
+# def generate_data {{{
 #
 #   (!) IMPORTANT: never provide
 #                  model without
 #                  providing dim
 #
-def generate_training_data(
+@Bench
+def generate_data(
+
+    # reference to env
     env,
-    score_req,
+
+    # how many episodes are evaluated
     eps,
+
+    # maximum numper of steps
     steps,
+
+    # how many actions our agent can perform
     action_space,
-    _model=(False,None)
+
+    # minimum score the generated data for
+    # our data set has to have
+    score_req,
+
+    # our model for generating the data
+    _model=(False,None),
+
+    # our data set we continously improve
+    data_set = False
 ):
+
     # bind _model
     model = _model[0]
+
     # dim: {{{
     # if this is the first time this function is called
     # (no model and no dim provided and actions chosen
@@ -34,21 +56,22 @@ def generate_training_data(
     # }}}
     dim = _model[1]
 
-    # training_data: {{{
-    # the dataset we want to return. With
+    # data_set: {{{
+    # the data set we want to return. With
     # this data we want to train our model
     # to perform actions to its environment
     # (env)
-    # [ [ observation, action ] ]
+    # [ [ observation, action, score ] ]
     # }}}
-    training_data = []
-    # all scores
-    scores = []
+    if not data_set:
+        data_set = []
+
+
     # accepted_scores: {{{
     # just the scores from the episodes that
     # were good enough (where the episode's
     # score was higher than the score_requirement)
-    # are put to training_data
+    # are put to data_set
     # }}}
     accepted_scores = []
 
@@ -56,15 +79,21 @@ def generate_training_data(
     for _ in range(eps):
 
         score = 0
+
         # observations and actions done in this episode
         # [ ( observation , action ) ]
         eps_mem = []
-        # previous observation (provided by env.step)
+
+        # previous observation (provided by env.step),
+        # initialized as empty list when model is not
+        # defined, else with a random numpy array with
+        # the dimension (dim,)
         if dim == None:
             prev_obs = []
         else:
             prev_obs = np.random.random((dim,))
-        # do a maximum of goal_steps many actions {{{
+
+        # do a maximum of steps many actions {{{
         for _ in range(steps):
 
             # if model is not provided choose random action
@@ -100,6 +129,7 @@ def generate_training_data(
         # if the score is higher than score_requirement,
         # the episode gets added to trainings_data.
         if score >= score_req:
+
             accepted_scores.append(score)
 
             # iterate this episodes memory {{{
@@ -114,23 +144,27 @@ def generate_training_data(
                         output[x] = 1
 
                 # saving our training data
-                training_data.append([data[0], output])
+                data_set.append([data[0], output, score])
             # }}}
 
-        # save score to the overall scores
-        scores.append(score)
         # reset env for next episode
         env.reset()
     # }}}
 
-    # stats of the dataset {{{
-    print('Average accepted score:',mean(accepted_scores))
-    print('Median score for accepted scores:',median(accepted_scores))
-    print(Counter(accepted_scores))
-    # }}}
+    # remove entries that are not
+    # good enough for training
+    clear = lambda set, req: [x for x in set if x[2] >= req]
 
-    # return training_data and dim which should be collected
+    data_set = clear(
+        data_set,
+        math.floor(
+            (score_req + mean(accepted_scores)) / 2
+        )
+    )
+
+    print('Average data set score:',mean([x[2] for x in data_set]))
+
+    # return data_set and dim which should be collected
     # when running this function the first time.
-    return training_data, dim
+    return data_set, dim
 # }}}
-
