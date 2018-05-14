@@ -36,3 +36,5 @@ for a distributed system.
 - **[awesome-reinforcement-learning](https://github.com/aikorea/awesome-rl#human-computer-interaction)** for stuff about reinforcement learning.
 
 - **[multi-agent system](https://en.wikipedia.org/wiki/Multi-agent_system)** theoretical model of something we could build.
+
+- **[deep q learning](http://rll.berkeley.edu/deeprlcourse/f17docs/lecture_7_advanced_q_learning.pdf)** holy sh\*t mathematical but basically describes how our agent works and how to optimize it further.
