@@ -36,11 +36,6 @@ def concurrent_generate_data(
 # }}}
 
 # def generate_data {{{
-#
-#   (!) IMPORTANT: never provide
-#                  model without
-#                  providing dim
-#
 @Protocol
 def generate_data(
 
