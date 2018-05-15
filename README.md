@@ -38,4 +38,6 @@ for a distributed system.
 
 - **[deep q learning](http://rll.berkeley.edu/deeprlcourse/f17docs/lecture_7_advanced_q_learning.pdf)** holy sh\*t mathematical but basically describes how our agent works and how to optimize it further.
 
+- **[double deep q learining](https://arxiv.org/pdf/1509.06461.pdf)**
+
 - **[time to beat LunarLander-v2](https://gym.openai.com/evaluations/eval_FbKq5MxAS9GlvB7W6ioJkg/)** 22 minutes.
