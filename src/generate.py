@@ -44,8 +44,16 @@ def concurrent_generate_data(
 @Protocol
 def generate_data(
 
-    # our data set we continously improve
-    data_set = False,
+    # data_set: {{{
+    #
+    # the data set we want to return. With
+    # this data we want to train our model
+    # to perform actions to its environment
+    # (env)
+    # [ [ observation, action, score ] ]
+    #
+    # }}}
+    data_set = [],
 
 ):
 
@@ -57,18 +65,6 @@ def generate_data(
                       action_space, \
                       model
     # }}}
-
-    # data_set: {{{
-    #
-    # the data set we want to return. With
-    # this data we want to train our model
-    # to perform actions to its environment
-    # (env)
-    # [ [ observation, action, score ] ]
-    #
-    # }}}
-    if not data_set:
-        data_set = []
 
     # accepted_scores: {{{
     #
@@ -103,6 +99,8 @@ def generate_data(
             # if model is not provided choose random action
             # (0 or 1) and do it with env.step, else predict
             # next action with the model
+            action = random.randrange(0,action_space)
+            '''
             if not model:
                 action = random.randrange(0,action_space)
             else:
@@ -111,6 +109,7 @@ def generate_data(
                         np.array([prev_obs])
                     )[0]
                 )
+            '''
 
             observation, reward, done, info = env.step(action)
 
@@ -152,6 +151,7 @@ def generate_data(
         env.reset()
     # }}}
 
+    '''
     # remove entries that are not good enough for training {{{
     clear = lambda set, req: [x for x in set if x[2] >= req]
 
@@ -162,6 +162,7 @@ def generate_data(
         )
     )
     # }}}
+    '''
 
     print('Average data set score:',mean([x[2] for x in data_set]))
 

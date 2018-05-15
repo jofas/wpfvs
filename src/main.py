@@ -206,7 +206,8 @@ def main(
 
             score = test_model(visual = visual)
 
-        data_set = generate_data(data_set=data_set)
+        #data_set = generate_data(data_set=data_set)
+        data_set = generate_data()
 
         model = train_model(data=data_set,model=model)
 
