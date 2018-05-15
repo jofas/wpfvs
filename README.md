@@ -8,12 +8,13 @@
 
   - keras: <code>pip install keras</code>
   
-  - gym: 
-<code>
-  git clone https://github.com/openai/gym
-  cd gym
-  pip install -e '.[all]'
-</code>
+  - gym:
+  
+    + <code> git clone https://github.com/openai/gym </code>
+      
+    + <code> cd gym </code>
+  
+    + <code> pip install -e '.[all]' </code>
 
 2. execute: 
 
