@@ -3,49 +3,131 @@ import os
 
 from .generate import generate_data
 from .model import train_model, test_model
-from .bench import Bench
+from .protocol import Protocol
 
 cp = 'CartPole-v0'
 ll = 'LunarLander-v2'
 
+# the neural net
+model        = None
+# input_dim: {{{
+#
+# represents the input dimension our model uses.
+# Gets set when initializing the data_set to
+# len(data_set[0][0]), the size our observation has.
+#
+# }}}
+input_dim    = None
+# global reference to our environment
+env          = None
+# meta data for each environment {{{
+# {{{
+#
+#   goal_score:
+#       highscore
+#
+#   score_req:
+#       minimum score the first
+#       data in our data set has
+#       to reach
+#
+#   steps:
+#       is used to loop the actions
+#       performed in model.train_model
+#       and generate.generate_data.
+#
+#   eps:
+#       episodes that are performed
+#       every time in
+#       generate.generate_data
+#       (eps * steps actions are
+#       performed).
+#
+#   goal_cons:
+#       how often the agent should
+#       reach the goal_score con-
+#       secutively before we can
+#       say our agent has solved the
+#       environment
+#
+#   action_space:
+#       represents the set of actions our
+#       agent can perform to this environment.
+#       Actually it is just an integer n and
+#       the actions the agent can perform are
+#       0, 1, ..., n-1
+#
+# }}}
+goal_score   = None
+score_req    = None
+steps        = None
+eps          = None
+goal_cons    = None
+action_space = None
+# }}}
+
 # def main {{{
 def main(
 
-    # test: {{{
-    # defines which neural net is used.
-    # if test is True, a smaller net will
-    # be used, so testing changes
-    # made to this program other than the
-    # actual agent can be done faster
-    # }}}
-    test = False,
-
     # visual: {{{
+    #
     # defines if the gym environment should
     # be rendered (output on screen) or not
     # when the agent is tested (model.test_model).
     # if gym does not have to render it can
     # perform the testing much faster.
+    #
     # }}}
     visual = False,
 
     # env_name: {{{
+    #
     # defines the gym environment. Right now
     # cp und ll can be used (others may as
     # well, but aren't jet tested)
+    #
     # }}}
     env_name = cp,
 
-    # bench: {{{
-    # defines if we want to benchmark the
-    # process or not
+    # _model: {{{
+    #
+    # defines which neural net is imported from
+    # $WPFVS_HOME/models. Every module in models
+    # has a model-function which returns a compiled
+    # keras Sequential. _model is passed to
+    # model.train_model as imp parameter when
+    # initializing the model (first call of model.
+    # train_model
+    #
     # }}}
-    bench = False
+    _model = '64x64',
+
+    # procs: {{{
+    #
+    # CPython's threads only run on a single core,
+    # which is not what we need, instead we need
+    # to generate our data using multiple cores,
+    # which is only possible with Processes in
+    # CPython.
+    #
+    # }}}
+    procs = 1
+
 ):
+    global model
+    global env
+    global goal_score
+    global score_req
+    global steps
+    global eps
+    global goal_cons
+    global action_space
+    global input_dim
 
     # $WPFVS_HOME has to be set when running
-    # this program (bench.Bench needs it for
-    # writing the benchmark to file)
+    # this program (protocol.Protocol needs it
+    # for writing the protocolled meta data to
+    # file)
     if not 'WPFVS_HOME' in os.environ:
         raise Exception('ENVIRONMENT VARIABLE WPFVS_HOME is not set')
 
@@ -55,46 +137,16 @@ def main(
     # not know env_name
     env = gym.make(str(env_name))
 
-    # meta data for each environment {{{
-    #
-    #   goal_score:
-    #       highscore
-    #
-    #   score_req:
-    #       minimum score the first
-    #       data in our data set has
-    #       to reach
-    #
-    #   goal_steps:
-    #       is used to loop the actions
-    #       performed in model.train_model
-    #       and generate.generate_data.
-    #
-    #   eps:
-    #       episodes that are performed
-    #       every time in
-    #       generate.generate_data
-    #       (eps * goal_steps actions are
-    #       performed).
-    #
-    #   goal_cons:
-    #       how often the agent should
-    #       reach the goal_score con-
-    #       secutively before we can
-    #       say our agent has solved the
-    #       environment
-    #
-    # }}}
     if env_name == cp:
         goal_score=200
         score_req=50
-        goal_steps=500
-        eps = 1000
+        steps=500
+        eps = 2000
         goal_cons = 10
     elif env_name == ll:
         goal_score=1000
         score_req=-500
-        goal_steps=1000
+        steps=1000
         eps = 1000
         goal_cons=100
 
@@ -103,20 +155,10 @@ def main(
     # env.step(action) throws an error
     env.reset()
 
-    # save the descision if we will benchmark
-    # or not this time
-    Bench.bench = bench
     # save which environment is played
-    Bench.info['env'] =str(env_name)
+    Protocol.info['env'] = str(env_name)
+    Protocol.info['model'] = _model
 
-
-    # action_space: {{{
-    # represents the set of actions our
-    # agent can perform to this environment.
-    # Actually it is just an integer n and
-    # the actions the agent can perform are
-    # 0, 1, ..., n-1
-    # }}}
     action_space=env.action_space.n
 
     # initialize model: {{{
@@ -124,24 +166,12 @@ def main(
     # initialize the model with randomly
     # generated training data
 
-    # collect the training data set and
-    # the input dimension dim.
-    # dim should only be collected when
-    # this function gets called the first
-    # time, after that dim does not change,
-    # but still gets returned.
-    data_set, dim = generate_data(
-        env=env,
-        score_req=score_req,
-        action_space=action_space,
-        eps=eps,
-        steps=goal_steps
-    )
+    # collect the training data set
+    data_set = generate_data()
 
     # provide the model which is trained
     # with our random data set
-    model = train_model(data=data_set,test=test)
-
+    model = train_model(data=data_set,imp=_model)
     # }}}
 
     # counts the times the net reaches goal_cons
@@ -156,13 +186,7 @@ def main(
     #
     while cons < goal_cons:
 
-        score = test_model(
-            env=env,
-            model=model,
-            dim=dim,
-            steps=goal_steps,
-            visual=visual
-        )
+        score = test_model(visual=visual)
 
         # if the previous test equals our
         # goal_score, we want to count the
@@ -177,37 +201,14 @@ def main(
             # we reached our goal. Our net
             # has solved the environment
             if cons == goal_cons:
-                Bench.dump()
+                Protocol.dump()
                 return
 
-            score = test_model(
-                env=env,
-                model=model,
-                dim=dim,
-                steps=goal_steps,
-                visual = visual
-            )
+            score = test_model(visual = visual)
 
-        data_set, _ = generate_data(
-            env=env,
-            _model=(model,dim),
-            data_set=data_set,
+        data_set = generate_data(data_set=data_set)
 
-            # set the new score_req to the average
-            # of our tests.
-            score_req= (
-                (score + goal_score * cons) / ( cons + 1 )
-            ),
-
-            action_space=action_space,
-            eps=eps,
-            steps=goal_steps
-        )
-
-        model = train_model(
-            data=data_set,
-            model=model,
-        )
+        model = train_model(data=data_set,model=model)
 
         # our agent has failed. We need to
         # train it again and try to reach

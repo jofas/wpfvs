@@ -5,27 +5,19 @@ from src.main import main
 
 parser = ArgumentParser()
 
-parser.add_argument("-t", "--test", nargs='?', dest="test", default=False)
+parser.add_argument("-p", "--procs", dest="procs",default=1, type=int)
 parser.add_argument("-v", "--visual", nargs='?', dest="visual", default=False)
 parser.add_argument("-e", "--env", dest="env", default="CartPole-v0")
-parser.add_argument("-b", "--benchmark", nargs='?', dest="bench", default=False)
+parser.add_argument("-m", "--model", dest="model", default="64x64")
 
 args = parser.parse_args()
-
-if args.test == None:
-    args.test = True
 
 if args.visual == None:
     args.visual = True
 
-if args.bench == None:
-    args.bench = True
-
-print(args)
-
 main(
-    test=args.test,
-    visual=args.visual,
-    env_name=args.env,
-    bench=True
+    visual   = args.visual,
+    env_name = args.env,
+    _model   = args.model,
+    procs    = args.procs
 )

@@ -4,14 +4,23 @@
 
 1. install dependencies:
   
-  - <code>pip install tensorflow</code>
+  - tensorflow: <code>pip install tensorflow</code>
 
-  - <code>pip install keras</code>
+  - keras: <code>pip install keras</code>
   
-  - <code>pip install gym</code>
+  - gym: 
+<code>
+  git clone https://github.com/openai/gym
+  cd gym
+  pip install -e '.[all]'
+</code>
 
-2. execute: <code>python3 run.py</code> 
+2. execute: 
 
+  - Set WPFVS\_HOME variable: <code>soucre .env</code>
+
+  - start program with: <code>python3 run.py</code>
+ 
 ## todo
 
 ## links

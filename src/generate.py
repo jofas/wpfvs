@@ -4,8 +4,36 @@ import math
 
 from statistics import median, mean
 from collections import Counter
+from concurrent import futures
 
-from .bench import Bench
+from .protocol import Protocol
+
+# def concurrent_generate_data {{{
+def concurrent_generate_data(
+
+    # our data set we continously improve
+    data_set = [],
+
+    # how many processes we use for com-
+    # puting our data set
+    procs = 1
+
+):
+    with futures.ProcessPoolExecutor(max_workers=procs) as e:
+
+        fs = {
+            e.submit(
+                generate_data,
+                #data_set = data_set,
+            ) : i for i in range(procs)
+        }
+
+        for f in futures.as_completed(fs):
+            f_ds, = f.result()
+            data_set.append[f_ds]
+
+        return data_set
+# }}}
 
 # def generate_data {{{
 #
@@ -13,65 +41,42 @@ from .bench import Bench
 #                  model without
 #                  providing dim
 #
-@Bench
+@Protocol
 def generate_data(
 
-    # reference to env
-    env,
-
-    # how many episodes are evaluated
-    eps,
-
-    # maximum numper of steps
-    steps,
-
-    # how many actions our agent can perform
-    action_space,
-
-    # minimum score the generated data for
-    # our data set has to have
-    score_req,
-
-    # our model for generating the data
-    _model=(False,None),
-
     # our data set we continously improve
-    data_set = False
+    data_set = False,
+
 ):
 
-    # bind _model
-    model = _model[0]
-
-    # dim: {{{
-    # if this is the first time this function is called
-    # (no model and no dim provided and actions chosen
-    # randomly) dim gets set to the input-dimension of
-    # our model (size of observation) and should be used
-    # further to combine dim with the model as _model as
-    # input (we need a random set of dim size, which we
-    # provide our model with to generate the first action
-    # (basically randomly, because the data is not from
-    # an observation), before we can use our first
-    # observation in the next iteration.
+    # import global variables {{{
+    from .main import env,          \
+                      steps,        \
+                      eps,          \
+                      score_req,    \
+                      action_space, \
+                      model
     # }}}
-    dim = _model[1]
 
     # data_set: {{{
+    #
     # the data set we want to return. With
     # this data we want to train our model
     # to perform actions to its environment
     # (env)
     # [ [ observation, action, score ] ]
+    #
     # }}}
     if not data_set:
         data_set = []
 
-
     # accepted_scores: {{{
+    #
     # just the scores from the episodes that
     # were good enough (where the episode's
     # score was higher than the score_requirement)
     # are put to data_set
+    #
     # }}}
     accepted_scores = []
 
@@ -85,13 +90,12 @@ def generate_data(
         eps_mem = []
 
         # previous observation (provided by env.step),
-        # initialized as empty list when model is not
-        # defined, else with a random numpy array with
-        # the dimension (dim,)
-        if dim == None:
+        # initialized as empty list when the data_set is
+        # empty, else with a random numpy array
+        if data_set == []:
             prev_obs = []
         else:
-            prev_obs = np.random.random((dim,))
+            prev_obs = np.random.random((len(data_set[0][0]),))
 
         # do a maximum of steps many actions {{{
         for _ in range(steps):
@@ -116,9 +120,6 @@ def generate_data(
             if len(prev_obs) > 0 :
                 eps_mem.append([prev_obs, action])
             prev_obs = observation
-
-            if dim == None:
-                dim = len(prev_obs)
 
             score+=reward
 
@@ -151,8 +152,7 @@ def generate_data(
         env.reset()
     # }}}
 
-    # remove entries that are not
-    # good enough for training
+    # remove entries that are not good enough for training {{{
     clear = lambda set, req: [x for x in set if x[2] >= req]
 
     data_set = clear(
@@ -161,10 +161,9 @@ def generate_data(
             (score_req + mean(accepted_scores)) / 2
         )
     )
+    # }}}
 
     print('Average data set score:',mean([x[2] for x in data_set]))
 
-    # return data_set and dim which should be collected
-    # when running this function the first time.
-    return data_set, dim
+    return data_set
 # }}}
