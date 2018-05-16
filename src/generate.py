@@ -181,11 +181,6 @@ def generator(procs = 1, data_set = []):
 # }}}
 
 # def generate_data DEPRECATED {{{
-#
-#   (!) IMPORTANT: never provide
-#                  model without
-#                  providing dim
-#
 @Protocol
 def generate_data(
 
