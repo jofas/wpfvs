@@ -1,8 +1,5 @@
 import random
 import importlib
-import keras
-from keras.models import Sequential
-from keras.layers import Dense, Dropout
 
 import numpy as np
 
@@ -69,7 +66,8 @@ def test_model(visual):
                 )[0]
             )
 
-        new_observation, reward, done, info = env.step(action)
+        new_observation, reward, done, info = \
+            env.step(action)
 
         prev_obs = new_observation
 

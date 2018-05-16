@@ -1,8 +1,7 @@
-import keras
-from keras.models import Sequential
-from keras.layers import Dense, Dropout
-
 def model(input_size, output_size):
+    import keras
+    from keras.models import Sequential
+    from keras.layers import Dense, Dropout
 
     model = Sequential([
         Dense(64, activation='relu',input_dim=input_size),
