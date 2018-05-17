@@ -1,5 +1,5 @@
 def model(input_size, output_size):
-    import keras
+
     from keras.models import Sequential
     from keras.layers import Dense, Dropout
 
@@ -9,6 +9,9 @@ def model(input_size, output_size):
         Dense(output_size,activation='softmax'),
     ])
 
+    return compile(model)
+
+def compile(model):
     # meta we need for training
     model.compile(
         optimizer='adam',

@@ -15,14 +15,21 @@ class Protocol:
         'steps'      : None,
         'eps'        : None,
         'goal_cons'  : None,
-        'loop'       : [{
+        'loop'       : [
+
+            # example
+            '''
+            {
             'loop_number'    : None,
             'data_set'       : None,
             'avg_data_set'   : None,
             'cons'           : None,
             'score'          : None,
             'avg_score'      : None,
-        },],
+            },
+            '''
+
+        ],
         'time'       : {
             'single' : {},
             'total'  : {},

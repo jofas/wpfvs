@@ -50,6 +50,13 @@ ll = 'LunarLander-v2'
 #   an integer n and the actions the agent can perform
 #   are 0, 1, ..., n-1
 #
+# import_:
+#   name of the import module located
+#   at $WPFVS_HOME/models.
+#   Every module there has a function
+#   model(input_size, output_size) that
+#   returns a compiled Keras model
+#
 # }}}
 model        = None
 input_dim    = None
@@ -60,6 +67,7 @@ steps        = None
 eps          = None
 goal_cons    = None
 action_space = None
+import_      = None
 # }}}
 
 # def main {{{
@@ -82,7 +90,7 @@ action_space = None
 #   $WPFVS_HOME/models. Every module in models
 #   has a model-function which returns a compiled
 #   keras Sequential. _model is passed to
-#   model.train_model as imp parameter when
+#   model.train_model as import_ parameter when
 #   initializing the model (first call of model.
 #   train_model
 #
@@ -109,6 +117,7 @@ def main(
     global goal_cons
     global action_space
     global input_dim
+    global import_
 
     # $WPFVS_HOME has to be set when running
     # this program (protocol.Protocol needs it
@@ -143,6 +152,8 @@ def main(
         steps=1000
         eps = 1000
         goal_cons=100
+
+    import_ = _model
     # }}}
 
     # save meta in protocol {{{
@@ -169,7 +180,7 @@ def main(
 
     # provide the model which is trained
     # with our random data set
-    model = train_model(data=data_set,imp=_model)
+    model = train_model(data=data_set)
     # }}}
 
     # counts the times the net reaches goal_cons
@@ -184,45 +195,27 @@ def main(
     #
     while cons < goal_cons:
 
-        score = test_model(visual=visual)
-
-        # if the previous test equals our
-        # goal_score, we want to count the
-        # times, the net reaches the goal_score
-        # consecutively, without having to
-        # train it again
-        while score == goal_score and cons < goal_cons:
-
-            cons += 1
-            print('Consecutive: ', cons)
-
-            score = test_model(visual = visual)
+        ( done, score, cons ) = test_model(visual=visual)
 
         Protocol.save_loop(
             score,
             cons,
-            data_set,
+            # only makes sense when doing dropout
+            #data_set,
+            [],
             avg_data_set
         )
 
-
-        if cons < goal_cons:
-            #our agent failed  and we
-            # have to train our model again
-
-            #data_set = generate_data(data_set=data_set)
-            data_set, avg_data_set = generator(
-                procs=procs,
-                data_set=data_set
-            )
-
-            model = train_model(data=data_set,model=model)
-
-            cons = 0
-        else:
-            # the agent mastered the environment
+        if done:
             Protocol.dump()
             return
+
+        data_set, avg_data_set = generator(
+            procs=procs,
+            data_set=data_set
+        )
+
+        model = train_model(data=data_set)
     # }}}
 # }}}
 
