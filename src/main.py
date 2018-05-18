@@ -153,6 +153,7 @@ def main(
         eps = 1000
         goal_cons=100
 
+    action_space=env.action_space.n
     import_ = _model
     # }}}
 
@@ -168,8 +169,6 @@ def main(
     Protocol.info['goal_cons'] = goal_cons
     # }}}
 
-    action_space=env.action_space.n
-
     # initialize model: {{{
     #
     # initialize the model with randomly
@@ -183,17 +182,13 @@ def main(
     model = train_model(data=data_set)
     # }}}
 
-    # counts the times the net reaches goal_cons
-    # consecutive
-    cons = 0
-
     # training loop: {{{
     #
     # continue training until, when the model
     # is tested, it reaches goal_cons consecutive
     # times goal_score
     #
-    while cons < goal_cons:
+    while True:
 
         ( done, score, cons ) = test_model(visual=visual)
 
