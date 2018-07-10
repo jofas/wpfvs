@@ -24,6 +24,36 @@
  
 ## todo
 
+### doc
+
+**topics we have to or could cover**
+
+- What our program does and benchmark analysis (how well we improved using the cluster)
+
+- The programs architecture
+
+- Our source code (listing for the documentation)
+
+- Tensorflow
+
+- Python
+
+- OpenAI Gym
+
+- Neural Nets
+
+- (RabbitMQ)
+
+- (Numpy) (fast linear algebra in python)
+
+- ...
+
+### proc
+
+- optimize dataset
+
+- add RabbitMQ for executing on the cluster
+
 ## links
 
 - **[openai gym](http://gym.openai.com)** for training a RL agent.
