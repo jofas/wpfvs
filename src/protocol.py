@@ -10,7 +10,6 @@ class Protocol:
         'env'        : None,
         'procs'      : None,
         'visual'     : None,
-        'score_req'  : None,
         'goal_score' : None,
         'steps'      : None,
         'eps'        : None,
@@ -22,7 +21,6 @@ class Protocol:
             {
             'loop_number'    : None,
             'data_set'       : None,
-            'avg_data_set'   : None,
             'cons'           : None,
             'score'          : None,
             'avg_score'      : None,
@@ -77,7 +75,7 @@ class Protocol:
 
     # def save_loop {{{
     @staticmethod
-    def save_loop(score, cons, data_set, avg_data_set):
+    def save_loop(score, cons, data_set):
 
         avg_score = (
             Protocol.info['goal_score'] * cons + score
@@ -92,7 +90,6 @@ class Protocol:
                 'action':x[1],
                 'score':x[2]
             } for x in data_set ],
-            'avg_data_set' : avg_data_set,
             'cons'         : cons,
             'score'        : score,
             'avg_score'    : avg_score,

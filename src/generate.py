@@ -2,11 +2,16 @@ import numpy as np
 import random
 import math
 import copy
+import gym
+
 from statistics import median, mean
 from collections import Counter
 from concurrent import futures
 
 from .protocol import Protocol
+
+GEN_RND = 0
+GEN_MDL = 1
 
 # def generator {{{
 # {{{
@@ -20,9 +25,9 @@ from .protocol import Protocol
 #
 # }}}
 @Protocol
-def generator(procs = 1, data_set = []):
+def generator(procs = 1, data_set = {}):
 
-    from .main import eps
+    from .main import eps, gen_rand_rat, gen_rand_eps
 
     # start the processes and await their
     # return values before returning the
@@ -33,19 +38,38 @@ def generator(procs = 1, data_set = []):
 
         # safe every process in fs
         fs = {
-            e.submit(_generator,i, int(eps / procs)) \
-                : i for i in range(procs)
+            e.submit(
+                _generator,
+                i,
+                int(eps / procs),
+                GEN_MDL
+            ) : i for i in range(procs)
         }
 
-        for i in range(procs,procs*10):
-            fs[e.submit(_generator_rnd,i, eps*10)] = i
+        # generate random generator processes
+        for i in range(procs,procs*gen_rand_rat):
+            fs[e.submit(_generator,i,eps*gen_rand_eps)] = i
 
         # await the return
         for f in futures.as_completed(fs):
-            data_set += f.result()
+            # since passing dics between processes is a
+            # pain in the ass we concat the newly generated
+            # data with our already existing data_set
+            # sequentially, so we don't have the
+            # synchronization overhead anymore which made
+            # our program way slower.
+            for v in f.result():
+                k = str(v['obs'])
+                data_set[k] = v
 
-    # return the data set and the average score
-    return data_set, mean([x[2] for x in data_set])
+                # e
+                #if k in data_set and \
+                #    v['reward'] > data_set[k]['reward']:
+                #        data_set[k] = v
+                #else:
+                #    data_set[k] = v
+
+    return data_set
 # }}}
 
 # def _generator {{{
@@ -58,19 +82,26 @@ def generator(procs = 1, data_set = []):
 #   the number of episodes the
 #   process should do.
 #
+# proc_type:
+#  either GEN_RND or GEN_MDL (generate random data or use
+#  model to make predictions)
+#
 # }}}
-def _generator(id, n):
+def _generator(id, n, proc_type=GEN_RND):
 
     # imports {{{
     import tensorflow as tf
     from keras import Sequential
     import keras.backend as K
 
-    from .main import env,          \
+    from .main import env_,         \
                       steps,        \
-                      score_req,    \
                       action_space, \
+                      goal_score,   \
                       input_dim,    \
+                      r_take_eps,   \
+                      r_clean_eps,  \
+                      r_clean_cut,  \
                       model
     # }}}
 
@@ -81,12 +112,10 @@ def _generator(id, n):
         # tf session
         K.set_session(s)
 
-        #print('{}: {}'.format(id, K.get_session()))
-
         # generate local env to avoid race conditions
-        _env = copy.deepcopy(env)
+        _env = gym.make(env_)
+        _env.reset()
 
-        #if id % 2 == 0  and model != None:
         if model != None:
             _model = Sequential.from_config(model[0])
             _model.set_weights(model[1])
@@ -95,314 +124,77 @@ def _generator(id, n):
 
         data_set = []
 
-        # simulate inital_eps many episodes {{{
+        # simulate n many episodes {{{
         for _ in range(n):
 
-            score = 0
-
-            # observations and actions done in this episode
-            # [ ( observation , action ) ]
-            eps_mem = []
-
-            # previous observation (provided by env.step),
-            # initialized as empty list when the data_set is
-            # empty, else with a random numpy array
             prev_obs = []
+            score    = 0
+            eps_mem  = []
 
             # do a maximum of steps many actions {{{
             for _ in range(steps):
 
-                if _model != None and prev_obs != []:
-                    action = np.argmax(
-                        _model.predict(
-                            np.array([prev_obs])
-                        )[0]
-                    )
+                if _model     != None    and \
+                    len(prev_obs) > 0    and \
+                    proc_type != GEN_RND:
+                        # if it is not the first time we
+                        # generate data nor the first move this
+                        # episode, our model predicts the next
+                        # action
+                        action = np.argmax(
+                            _model.predict(
+                                np.array([prev_obs])
+                            )[0]
+                        )
                 else:
+                    # if the model does not exist yet
+                    # (first time this function is called)
+                    # or we have to do our first move in
+                    # this episode, we make a random move
                     action = random.randrange(0,action_space)
-
 
                 observation, reward, done, info = \
                     _env.step(action)
 
-                # safe previous observation (prev_obs) and
-                # the current action. Set prev_obs to the
-                # current observation
-                if len(prev_obs) > 0 :
-                    eps_mem.append([prev_obs, action])
-                prev_obs = observation
+                if len(prev_obs) > 0:
+                    # parse the action to a format our
+                    # model will understand (right now
+                    # action is an integer saying which
+                    # action was performed, for training we
+                    # need another representation
+                    _action = [0 for i in range(action_space)]
+                    _action[action] = 1
 
-                score+=reward
+                    # safe our observations
+                    eps_mem.append({
+                        'obs'        : prev_obs,
+                        'prev_score' : score,
+                        'action'     : _action,
+                        'reward'     : reward,
+                    })
+
+                prev_obs = observation
+                score += reward
 
                 # episode failed early
                 if done: break
             # }}}
 
-            # if the score is higher than score_requirement,
-            # the episode gets added to trainings_data.
-            if score >= score_req:
-
-                # iterate this episodes memory {{{
-                for data in eps_mem:
-
-                    # parse the action to the output layer
-                    # format of our model (which action the
-                    # model should perform)
-                    output = [0 for i in range(action_space)]
-                    for x in range(action_space):
-                        if data[1] == x:
-                            output[x] = 1
-
-                    # saving our training data
-                    data_set.append([data[0], output, score])
-                # }}}
+            # analyse episode
+            if score/goal_score >= r_take_eps :
+                data_set += eps_mem
+            elif score/goal_score >= r_clean_eps:
+                data_set += list(filter(
+                    lambda x: \
+                        x['prev_score']/score < r_clean_cut
+                    ,
+                    eps_mem
+                ))
 
             # reset env for next episode
             _env.reset()
         # }}}
-
-        if len(data_set) > 0:
-            print(
-                '{}: avg: {}, len: {}'.format(
-                    id,
-                    mean([x[2] for x in data_set]),
-                    len(data_set)
-                )
-            )
-        else:
-            print('{}: NO DATA GENERATED'.format(id))
-
+        print('Generator Process ' + str(id) + ' finished')
         return data_set
     # }}}
-# }}}
-
-# def _generator_rnd {{{
-# {{{
-#
-# id:
-#   process number
-#
-# n:
-#   the number of episodes the
-#   process should do.
-#
-# }}}
-def _generator_rnd(id, n):
-
-    # imports {{{
-    from .main import env,          \
-                      steps,        \
-                      score_req,    \
-                      action_space, \
-                      input_dim
-    # }}}
-
-
-
-    # generate local env to avoid race conditions
-    _env = copy.deepcopy(env)
-
-    data_set = []
-
-    # simulate inital_eps many episodes {{{
-    for _ in range(n):
-
-        score = 0
-
-        # observations and actions done in this episode
-        # [ ( observation , action ) ]
-        eps_mem = []
-
-        # previous observation (provided by env.step),
-        # initialized as empty list when the data_set is
-        # empty, else with a random numpy array
-        prev_obs = []
-
-        # do a maximum of steps many actions {{{
-        for _ in range(steps):
-
-            action = random.randrange(0,action_space)
-
-            observation, reward, done, info = \
-                _env.step(action)
-
-            # safe previous observation (prev_obs) and
-            # the current action. Set prev_obs to the
-            # current observation
-            if len(prev_obs) > 0 :
-                eps_mem.append([prev_obs, action])
-            prev_obs = observation
-
-            score+=reward
-
-            # episode failed early
-            if done: break
-        # }}}
-
-        # if the score is higher than score_requirement,
-        # the episode gets added to trainings_data.
-        if score >= score_req:
-
-            # iterate this episodes memory {{{
-            for data in eps_mem:
-
-                # parse the action to the output layer
-                # format of our model (which action the
-                # model should perform)
-                output = [0 for i in range(action_space)]
-                for x in range(action_space):
-                    if data[1] == x:
-                        output[x] = 1
-
-                # saving our training data
-                data_set.append([data[0], output, score])
-            # }}}
-
-        # reset env for next episode
-        _env.reset()
-    # }}}
-
-    if len(data_set) > 0:
-        print(
-            '{}: avg: {}, len: {}'.format(
-                id,
-                mean([x[2] for x in data_set]),
-                len(data_set)
-            )
-        )
-    else:
-        print('{}: NO DATA GENERATED'.format(id))
-
-    return data_set
-# }}}
-
-# def generate_data DEPRECATED {{{
-@Protocol
-def generate_data(
-
-    # data_set: {{{
-    #
-    # the data set we want to return. With
-    # this data we want to train our model
-    # to perform actions to its environment
-    # (env)
-    # [ [ observation, action, score ] ]
-    #
-    # }}}
-    data_set = [],
-
-):
-
-    # import global variables {{{
-    from .main import env,          \
-                      steps,        \
-                      eps,          \
-                      score_req,    \
-                      action_space, \
-                      model
-    # }}}
-
-    # accepted_scores: {{{
-    #
-    # just the scores from the episodes that
-    # were good enough (where the episode's
-    # score was higher than the score_requirement)
-    # are put to data_set
-    #
-    # }}}
-    accepted_scores = []
-
-    # simulate inital_eps many episodes {{{
-    for _ in range(eps):
-
-        score = 0
-
-        # observations and actions done in this episode
-        # [ ( observation , action ) ]
-        eps_mem = []
-
-        # previous observation (provided by env.step),
-        # initialized as empty list when the data_set is
-        # empty, else with a random numpy array
-        if data_set == []:
-            prev_obs = []
-        else:
-            prev_obs = np.random.random((len(data_set[0][0]),))
-
-        # do a maximum of steps many actions {{{
-        for _ in range(steps):
-
-            # if model is not provided choose random action
-            # (0 or 1) and do it with env.step, else predict
-            # next action with the model
-            action = random.randrange(0,action_space)
-            '''
-            if not model:
-                action = random.randrange(0,action_space)
-            else:
-
-                action = np.argmax(
-                    model.predict(
-                        np.array([prev_obs])
-                    )[0]
-                )
-
-            '''
-
-            observation, reward, done, info = env.step(action)
-
-            # safe previous observation (prev_obs) and
-            # the current action. Set prev_obs to the
-            # current observation
-            if len(prev_obs) > 0 :
-                eps_mem.append([prev_obs, action])
-            prev_obs = observation
-
-            score+=reward
-
-            # episode failed early
-            if done: break
-        # }}}
-
-        # if the score is higher than score_requirement,
-        # the episode gets added to trainings_data.
-        if score >= score_req:
-
-            accepted_scores.append(score)
-
-            # iterate this episodes memory {{{
-            for data in eps_mem:
-
-                # parse the action to the output layer
-                # format of our model (which action the
-                # model should perform)
-                output = [0 for i in range(action_space)]
-                for x in range(action_space):
-                    if data[1] == x:
-                        output[x] = 1
-
-                # saving our training data
-                data_set.append([data[0], output, score])
-            # }}}
-
-        # reset env for next episode
-        env.reset()
-    # }}}
-
-    '''
-    # remove entries that are not good enough for training {{{
-    clear = lambda set, req: [x for x in set if x[2] >= req]
-
-    data_set = clear(
-        data_set,
-        math.floor(
-            (score_req + mean(accepted_scores)) / 2
-        )
-    )
-    # }}}
-    '''
-
-    print('Average data set score:',mean([x[2] for x in data_set]))
-
-    return data_set
 # }}}

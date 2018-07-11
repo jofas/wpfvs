@@ -58,8 +58,8 @@ def _train_model(data):
     # parse the training data to an
     # input format Keras can use for
     # training
-    X = np.array([i[0] for i in data])
-    y = np.array([i[1] for i in data])
+    X = np.array([i['obs']    for _, i in data.items()])
+    y = np.array([i['action'] for _, i in data.items()])
 
     # start tf session {{{
     with tf.Session() as s:
@@ -69,7 +69,6 @@ def _train_model(data):
         K.set_session(s)
 
         if model == None:
-
             # initialize model
             _model = importlib.import_module(
                 'models.'+import_

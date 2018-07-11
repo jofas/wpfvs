@@ -26,10 +26,6 @@ ll = 'LunarLander-v2'
 # goal_score:
 #   highscore
 #
-# score_req:
-#   minimum score the first data in our data set has
-#   to reach
-#
 # steps:
 #   is used to loop the actions performed in
 #   model.train_model and generate.generate_data.
@@ -61,13 +57,23 @@ ll = 'LunarLander-v2'
 model        = None
 input_dim    = None
 env          = None
+env_         = None
 goal_score   = None
-score_req    = None
 steps        = None
 eps          = None
 goal_cons    = None
 action_space = None
 import_      = None
+#! DOC
+gen_rand_rat = None
+#! DOC
+gen_rand_eps = None
+#! DOC
+r_take_eps   = None
+#! DOC
+r_clean_eps  = None
+#! DOC
+r_clean_cut  = None
 # }}}
 
 # def main {{{
@@ -110,14 +116,42 @@ def main(
 ):
     global model
     global env
+    global env_
     global goal_score
-    global score_req
     global steps
     global eps
     global goal_cons
     global action_space
     global input_dim
     global import_
+    global gen_rand_rat
+    global gen_rand_eps
+    global r_take_eps
+    global r_clean_eps
+    global r_clean_cut
+
+    # set global meta for each environment {{{
+    if env_name == cp:
+        goal_score=200
+        steps=1000
+        eps = 100
+        goal_cons = 10
+        gen_rand_rat = 10
+        gen_rand_eps = 100
+        r_take_eps   = 0.95
+        r_clean_eps  = 0.2
+        r_clean_cut  = 0.8
+    elif env_name == ll:
+        goal_score=200
+        steps=1000
+        eps = 100
+        goal_cons=100
+        gen_rand_rat = 10
+        gen_rand_eps = 1
+        r_take_eps   = 0
+        r_clean_eps  = -3
+        r_clean_cut  = -0.5
+    # }}}
 
     # $WPFVS_HOME has to be set when running
     # this program (protocol.Protocol needs it
@@ -133,36 +167,21 @@ def main(
     # raises error when gym does
     # not know env_name
     env = gym.make(str(env_name))
+    env_ = str(env_name)
 
     # mandatory first call of env.reset(),
     # without first calling env.reset(),
     # env.step(action) throws an error
     env.reset()
 
-    # set global meta {{{
-    if env_name == cp:
-        goal_score=200
-        score_req=50
-        steps=500
-        eps = 2000
-        goal_cons = 10
-    elif env_name == ll:
-        goal_score=1000
-        score_req=-500
-        steps=1000
-        eps = 1000
-        goal_cons=100
-
     action_space=env.action_space.n
     import_ = _model
-    # }}}
 
     # save meta in protocol {{{
     Protocol.info['env'] = str(env_name)
     Protocol.info['model'] = _model
     Protocol.info['procs'] = procs
     Protocol.info['visual'] = visual
-    Protocol.info['score_req'] = score_req
     Protocol.info['goal_score'] = goal_score
     Protocol.info['steps'] = steps
     Protocol.info['eps'] = eps
@@ -175,7 +194,7 @@ def main(
     # generated training data
 
     # collect the training data set
-    data_set, avg_data_set = generator(procs=procs)
+    data_set = generator(procs=procs)
 
     # provide the model which is trained
     # with our random data set
@@ -197,15 +216,14 @@ def main(
             cons,
             # only makes sense when doing dropout
             #data_set,
-            [],
-            avg_data_set
+            []
         )
 
         if done:
             Protocol.dump()
             return
 
-        data_set, avg_data_set = generator(
+        data_set = generator(
             procs=procs,
             data_set=data_set
         )
