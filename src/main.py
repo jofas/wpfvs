@@ -140,17 +140,17 @@ def main(
         gen_rand_eps = 100
         r_take_eps   = 0.95
         r_clean_eps  = 0.2
-        r_clean_cut  = 0.8
+        r_clean_cut  = 0
     elif env_name == ll:
         goal_score=200
         steps=1000
-        eps = 100
+        eps = 1000
         goal_cons=100
-        gen_rand_rat = 10
+        gen_rand_rat = 2
         gen_rand_eps = 1
         r_take_eps   = 0
         r_clean_eps  = -3
-        r_clean_cut  = -0.5
+        r_clean_cut  = 0.4
     # }}}
 
     # $WPFVS_HOME has to be set when running

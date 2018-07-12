@@ -25,7 +25,7 @@ GEN_MDL = 1
 #
 # }}}
 @Protocol
-def generator(procs = 1, data_set = {}):
+def generator(procs = 1, data_set = []):
 
     from .main import eps, gen_rand_rat, gen_rand_eps
 
@@ -52,16 +52,19 @@ def generator(procs = 1, data_set = {}):
 
         # await the return
         for f in futures.as_completed(fs):
+            data_set += f.result()
             # since passing dics between processes is a
             # pain in the ass we concat the newly generated
             # data with our already existing data_set
             # sequentially, so we don't have the
             # synchronization overhead anymore which made
             # our program way slower.
-            for v in f.result():
-                k = str(v['obs'])
-                data_set[k] = v
+            #for v in f.result():
+            #    k = str(v['obs'])
+            #    data_set[k] = v
 
+                # (!) This method is very costly
+                #
                 # e
                 #if k in data_set and \
                 #    v['reward'] > data_set[k]['reward']:
@@ -129,6 +132,7 @@ def _generator(id, n, proc_type=GEN_RND):
 
             prev_obs = []
             score    = 0
+            min      = 1000000
             eps_mem  = []
 
             # do a maximum of steps many actions {{{
@@ -173,6 +177,8 @@ def _generator(id, n, proc_type=GEN_RND):
                         'reward'     : reward,
                     })
 
+                if reward < min: min = reward
+
                 prev_obs = observation
                 score += reward
 
@@ -184,9 +190,12 @@ def _generator(id, n, proc_type=GEN_RND):
             if score/goal_score >= r_take_eps :
                 data_set += eps_mem
             elif score/goal_score >= r_clean_eps:
+                # normalize eps_mem and take the ones
+                # greater equal to r_clean_cut
                 data_set += list(filter(
-                    lambda x: \
-                        x['prev_score']/score < r_clean_cut
+                    lambda x: (x['reward'] - min)/  \
+                              (goal_score - min) >= \
+                              r_clean_cut
                     ,
                     eps_mem
                 ))
