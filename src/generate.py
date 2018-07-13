@@ -27,7 +27,7 @@ GEN_MDL = 1
 @Protocol
 def generator(procs = 1, data_set = []):
 
-    from .main import eps, gen_rand_rat, gen_rand_eps
+    from .main import eps, gen_rand, rand_eps
 
     # start the processes and await their
     # return values before returning the
@@ -41,14 +41,14 @@ def generator(procs = 1, data_set = []):
             e.submit(
                 _generator,
                 i,
-                int(eps / procs),
+                eps,
                 GEN_MDL
             ) : i for i in range(procs)
         }
 
         # generate random generator processes
-        for i in range(procs,procs*gen_rand_rat):
-            fs[e.submit(_generator,i,eps*gen_rand_eps)] = i
+        for i in range(procs, procs + gen_rand):
+            fs[e.submit(_generator,i,rand_eps)] = i
 
         # await the return
         for f in futures.as_completed(fs):
@@ -128,7 +128,7 @@ def _generator(id, n, proc_type=GEN_RND):
         data_set = []
 
         # simulate n many episodes {{{
-        for _ in range(n):
+        for _i in range(n):
 
             prev_obs = []
             score    = 0
@@ -199,6 +199,9 @@ def _generator(id, n, proc_type=GEN_RND):
                     ,
                     eps_mem
                 ))
+
+            if _i % int(n / 4) == 0:
+                print('Generator Process: ' + str(id) + ' eps: ' + str(_i))
 
             # reset env for next episode
             _env.reset()

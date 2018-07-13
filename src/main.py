@@ -35,6 +35,9 @@ ll = 'LunarLander-v2'
 #   generate.generate_data (eps * steps actions are
 #   performed).
 #
+# rand_eps:
+#   episodes that are performed by every random generator.
+#
 # goal_cons:
 #   how often the agent should reach the goal_score
 #   consecutively before we can say our agent has
@@ -53,6 +56,29 @@ ll = 'LunarLander-v2'
 #   model(input_size, output_size) that
 #   returns a compiled Keras model
 #
+# gen_rand:
+#   to every proc (generator using our model, not random)
+#   we add some random generators (adds new aspects to our
+#   training data). We add gen_rand many random generators.
+#
+# r_take_eps:
+#   DATA-SANITATION: we take every generated episodes where
+#   the episode's score devided by goal_score  is greater
+#   equal r_takes_eps.
+#
+# r_clean_eps:
+#   DATA-SANITATION: if an episode's score devided by
+#   goal_score is greater equal r_clean_eps we sanitize the
+#   episode's data and take it (if the episode generated a
+#   score lower than r_clean_eps we throw it away).
+#
+# r_clean_cut:
+#   DATA-SANITATION: if the episode's score devided by
+#   goal_score is between r_clean_eps and r_take_eps we
+#   normalize the data of the episode and take only the
+#   steps that generated a single score greater equal
+#   r_clean_cut.
+#
 # }}}
 model        = None
 input_dim    = None
@@ -61,18 +87,13 @@ env_         = None
 goal_score   = None
 steps        = None
 eps          = None
+rand_eps     = None
 goal_cons    = None
 action_space = None
 import_      = None
-#! DOC
-gen_rand_rat = None
-#! DOC
-gen_rand_eps = None
-#! DOC
+gen_rand     = None
 r_take_eps   = None
-#! DOC
 r_clean_eps  = None
-#! DOC
 r_clean_cut  = None
 # }}}
 
@@ -124,30 +145,30 @@ def main(
     global action_space
     global input_dim
     global import_
-    global gen_rand_rat
-    global gen_rand_eps
+    global gen_rand
+    global rand_eps
     global r_take_eps
     global r_clean_eps
     global r_clean_cut
 
     # set global meta for each environment {{{
     if env_name == cp:
-        goal_score=200
-        steps=1000
-        eps = 100
-        goal_cons = 10
-        gen_rand_rat = 10
-        gen_rand_eps = 100
+        goal_score   = 200
+        steps        = 1000
+        eps          = 100
+        rand_eps     = 100
+        goal_cons    = 10
+        gen_rand     = procs * 10
         r_take_eps   = 0.95
         r_clean_eps  = 0.2
         r_clean_cut  = 0
     elif env_name == ll:
-        goal_score=200
-        steps=1000
-        eps = 1000
-        goal_cons=100
-        gen_rand_rat = 2
-        gen_rand_eps = 1
+        goal_score   = 200
+        steps        = 1000
+        eps          = 40000
+        rand_eps     = 40000
+        goal_cons    = 100
+        gen_rand     = procs
         r_take_eps   = 0
         r_clean_eps  = -3
         r_clean_cut  = 0.4
