@@ -1,21 +1,11 @@
-import pika
 import gym
-import json
 import os
-import signal
-import numpy as np
 from multiprocessing import Manager, Process
 
-from .model import train_model, test_model
+from .rabbitmq import recv_data
+from .ttsl     import training_testing_sending_loop
 
-from ..config import HOST,          \
-                     DATAQUEUE,     \
-                     MODELEXCHANGE, \
-                     MSG_CONFIG,    \
-                     MSG_WEIGHTS,   \
-                     MSG_DONE,      \
-                     cp,            \
-                     ll
+from ..config import cp, ll
 
 # global values {{{
 # {{{
@@ -127,141 +117,12 @@ def main(visual, env_name, _model):
 
 
     ttsl = Process(
-        target = _training_testing_sending_loop,
+        target = training_testing_sending_loop,
         args   = (visual,)
     )
     ttsl.start()
 
-    _recv_data()
-
-# }}}
-
-# def _training_testing_sending_loop {{{
-def _training_testing_sending_loop(visual):
-    global data_set
-    global m_data_set
-
-    connection = _connect_rmq()
-    channel = connection.channel()
-
-    channel.exchange_declare(
-        exchange      = MODELEXCHANGE,
-        exchange_type = 'fanout'
-    )
-
-    X         = []
-    y         = []
-    conf_send = False
-    model     = None
-    test      = False
-
-
-    # loop {{{
-    while True:
-        body = {}
-
-        m_data_set.acquire()
-        if len(data_set) > 0:
-            print('training...')
-
-            # parse the training data to an
-            # input format Keras can use for
-            # training
-            print('parsing data_set for training...')
-            if len(X) > 0:
-                X = np.concatenate((
-                    X,
-                    np.array([i['obs']    for i in data_set])
-                ))
-            else:
-                X = np.array([i['obs']    for i in data_set])
-
-            if len(y) > 0:
-                y = np.concatenate((
-                    y,
-                    np.array([i['action'] for i in data_set])
-                ))
-            else:
-                y = np.array([i['action'] for i in data_set])
-
-            del(data_set[:])
-
-            model = train_model(X, y, model=model)
-            test = True
-
-        m_data_set.release()
-
-        if test:
-            print('testing...')
-            (done, score, cons) = test_model(visual, model)
-
-            print('sending...')
-
-            if done:
-                body['type'] = MSG_DONE
-            else:
-                if conf_send:
-                    body['type']  = MSG_WEIGHTS
-                    body['model'] = list(map(
-                        lambda y: y.tolist(),
-                        model.get_weights()
-                    ))
-                else:
-                    body['type']  = MSG_CONFIG
-                    body['model'] = model.to_json()
-
-                    conf_send = True
-
-            channel.basic_publish(
-                exchange    = MODELEXCHANGE,
-                routing_key = '',
-                body=json.dumps(body)
-            )
-
-            test = False
-
-            if done:
-                # TODO: dump protocol here
-                global main_pid
-                print('done!')
-                os.kill(main_pid, signal.SIGKILL)
-                os.kill(os.getpid(), signal.SIGKILL)
-    # }}}
-# }}}
-
-# def _recv_data {{{
-def _recv_data():
-    connection = _connect_rmq()
-    channel = connection.channel()
-
-    channel.queue_declare(queue=DATAQUEUE)
-
-    channel.basic_consume(
-        _recv_callback,
-        queue=DATAQUEUE,
-        no_ack=True
-    )
-
-    channel.start_consuming()
-# }}}
-
-# def _recv_callback {{{
-def _recv_callback(ch, method, properties, body):
-    global data_set
-    global m_data_set
-
-    m_data_set.acquire()
-    print('hallo aus callback')
-    data_set += json.loads(body.decode())
-    m_data_set.release()
-
-# }}}
-
-# def _connect_rmq {{{
-def _connect_rmq():
-    return pika.BlockingConnection(
-        pika.ConnectionParameters(host=HOST)
-    )
+    recv_data()
 # }}}
 
 if __name__ == '__main__':

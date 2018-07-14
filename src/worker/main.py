@@ -1,21 +1,13 @@
 import pika
 import gym
 import json
-import os
-import signal
 import numpy as np
 from multiprocessing import Manager, Process
 
-from .generate import generator
+from .gsl      import generating_sending_loop
+from .rabbitmq import recv_model
 
-from ..config import HOST,          \
-                     DATAQUEUE,     \
-                     MODELEXCHANGE, \
-                     MSG_CONFIG,    \
-                     MSG_WEIGHTS,   \
-                     MSG_DONE,      \
-                     cp,            \
-                     ll
+from ..config import cp, ll
 
 # global shared model (config and weights) + mutexes
 MDL_CONFIG    = Manager().dict()
@@ -137,100 +129,12 @@ def main(env_name, procs):
 
     # spawn generating-sending loop
     gsl = Process(
-        target = _generating_sending_loop,
+        target = generating_sending_loop,
         args   = (procs,)
     )
     gsl.start()
 
-    _recv_model()
-# }}}
-
-# def _generating_sending_loop {{{
-def _generating_sending_loop(procs):
-    connection = _connect_rmq()
-
-    channel = connection.channel()
-    channel.queue_declare(queue=DATAQUEUE)
-
-    while True:
-        # generate
-        data_set = generator(procs=procs)
-        # send
-        channel.basic_publish(
-            exchange    = '',
-            routing_key = DATAQUEUE,
-            body        = json.dumps(data_set)
-        )
-
-    connection.close()
-# }}}
-
-# def _recv_model {{{
-def _recv_model():
-    connection = _connect_rmq()
-    channel = connection.channel()
-    channel.exchange_declare(
-        exchange      = MODELEXCHANGE,
-        exchange_type = 'fanout'
-    )
-
-    result = channel.queue_declare(exclusive=True)
-    qn = result.method.queue
-
-    channel.queue_bind(
-        exchange = MODELEXCHANGE,
-        queue = qn
-    )
-
-    channel.basic_consume(
-        _recv_callback,
-        queue=qn,
-        no_ack=True
-    )
-
-    channel.start_consuming()
-# }}}
-
-# def _recv_callback {{{
-def _recv_callback(ch, method, properties, body):
-
-    # global shared model (config and weights) + mutexes
-    global M_MDL_CONFIG
-    global MDL_CONFIG
-    global M_MDL_WEIGHTS
-    global MDL_WEIGHTS
-
-
-    mdl = json.loads(body.decode())
-
-    if mdl['type'] == MSG_CONFIG:
-        with M_MDL_CONFIG:
-            MDL_CONFIG['model_json_str'] = mdl['model']
-
-    elif mdl['type'] == MSG_WEIGHTS:
-        with M_MDL_WEIGHTS:
-            MDL_WEIGHTS['weights_as_list'] = mdl['model']
-
-    elif mdl['type'] == MSG_DONE:
-
-        global gsl
-
-        print('done!')
-
-        # TODO: send protocol to executor
-
-        gsl.terminate()
-        os.kill(os.getpid(), signal.SIGKILL)
-# }}}
-
-# def _connect_rmq {{{
-#
-# connect to rabbitmq
-#
-def _connect_rmq():
-    return pika.BlockingConnection(
-        pika.ConnectionParameters(host=HOST)
-    )
+    recv_model()
 # }}}
 
 if __name__ == '__main__':

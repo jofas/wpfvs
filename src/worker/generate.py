@@ -206,6 +206,12 @@ def _generator(id, n, proc_type=GEN_RND):
         # }}}
 
         print('Generator Process ' + str(id) + ' finished')
-        return data_set
+
+        # send only the data which is necessary for
+        # training
+        return list(map(lambda x: {
+            'obs':x['obs'],
+            'action': x['action']
+        }, data_set))
     # }}}
 # }}}
