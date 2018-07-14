@@ -1,14 +1,11 @@
 import numpy as np
 import random
 import math
-import copy
 import gym
 
 from statistics import median, mean
 from collections import Counter
 from concurrent import futures
-
-from .protocol import Protocol
 
 GEN_RND = 0
 GEN_MDL = 1
@@ -20,11 +17,7 @@ GEN_MDL = 1
 #   how many processes should be used
 #   for computing our data set
 #
-# data_set:
-#   the data set we continously build
-#
 # }}}
-@Protocol
 def generator(procs = 1, data_set = []):
 
     from .main import eps, gen_rand, rand_eps
@@ -33,7 +26,7 @@ def generator(procs = 1, data_set = []):
     # return values before returning the
     # new data_set
     with futures.ProcessPoolExecutor(
-        max_workers=procs
+        max_workers=procs + gen_rand
     ) as e:
 
         # safe every process in fs
@@ -53,24 +46,6 @@ def generator(procs = 1, data_set = []):
         # await the return
         for f in futures.as_completed(fs):
             data_set += f.result()
-            # since passing dics between processes is a
-            # pain in the ass we concat the newly generated
-            # data with our already existing data_set
-            # sequentially, so we don't have the
-            # synchronization overhead anymore which made
-            # our program way slower.
-            #for v in f.result():
-            #    k = str(v['obs'])
-            #    data_set[k] = v
-
-                # (!) This method is very costly
-                #
-                # e
-                #if k in data_set and \
-                #    v['reward'] > data_set[k]['reward']:
-                #        data_set[k] = v
-                #else:
-                #    data_set[k] = v
 
     return data_set
 # }}}
@@ -94,18 +69,19 @@ def _generator(id, n, proc_type=GEN_RND):
 
     # imports {{{
     import tensorflow as tf
-    from keras import Sequential
+    from keras.models import model_from_json
     import keras.backend as K
 
     from .main import env_,         \
                       steps,        \
-                      action_space, \
                       goal_score,   \
-                      input_dim,    \
                       r_take_eps,   \
                       r_clean_eps,  \
                       r_clean_cut,  \
-                      model
+                      MDL_CONFIG,   \
+                      M_MDL_CONFIG, \
+                      MDL_WEIGHTS,  \
+                      M_MDL_WEIGHTS
     # }}}
 
     # start tf session {{{
@@ -118,12 +94,33 @@ def _generator(id, n, proc_type=GEN_RND):
         # generate local env to avoid race conditions
         _env = gym.make(env_)
         _env.reset()
+        action_space = _env.action_space.n
 
-        if model != None:
-            _model = Sequential.from_config(model[0])
-            _model.set_weights(model[1])
-        else:
-            _model = None
+        _model = None
+
+        # instantiate model {{{
+        if proc_type == GEN_MDL:
+            with M_MDL_CONFIG and M_MDL_WEIGHTS:
+                # only if we have data from our executor
+                # we can initialize the model
+                if len(MDL_CONFIG)  > 0  and len(MDL_WEIGHTS) > 0:
+
+                    _model = model_from_json(
+                        MDL_CONFIG['model_json_str']
+                    )
+
+                    print('parsing MDL_WEIGHTS...')
+                    MDL_WEIGHTS['wieghts_as_list'] = list(
+                        map(
+                            lambda x: np.array(x),
+                            MDL_WEIGHTS['weights_as_list']
+                        )
+                    )
+
+                    _model.set_weights(
+                        MDL_WEIGHTS['weights_as_list']
+                    )
+        # }}}
 
         data_set = []
 
@@ -171,7 +168,7 @@ def _generator(id, n, proc_type=GEN_RND):
 
                     # safe our observations
                     eps_mem.append({
-                        'obs'        : prev_obs,
+                        'obs'        : prev_obs.tolist(),
                         'prev_score' : score,
                         'action'     : _action,
                         'reward'     : reward,
@@ -186,7 +183,7 @@ def _generator(id, n, proc_type=GEN_RND):
                 if done: break
             # }}}
 
-            # analyse episode
+            # sanitize episode {{{
             if score/goal_score >= r_take_eps :
                 data_set += eps_mem
             elif score/goal_score >= r_clean_eps:
@@ -199,13 +196,15 @@ def _generator(id, n, proc_type=GEN_RND):
                     ,
                     eps_mem
                 ))
+            # }}}
 
             if _i % int(n / 4) == 0:
-                print('Generator Process: ' + str(id) + ' eps: ' + str(_i))
+                print('Generator Process ' + str(id) + ' eps: ' + str(_i))
 
             # reset env for next episode
             _env.reset()
         # }}}
+
         print('Generator Process ' + str(id) + ' finished')
         return data_set
     # }}}
