@@ -35,7 +35,6 @@ def train_model(X, y, model=None):
     model.fit(X,y,epochs=5,batch_size=1024)
 
     return model
-
     # }}}
 # }}}
 
@@ -51,11 +50,8 @@ def train_model(X, y, model=None):
 def test_model(visual, model):
 
     # imports {{{
-    from .main import action_space, \
-                      steps,        \
-                      goal_score,   \
-                      goal_cons,    \
-                      env
+    from .main    import action_space, env
+    from ..config import goal_score, steps, goal_cons
     # }}}
 
     cons = 0

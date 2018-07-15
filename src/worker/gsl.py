@@ -1,16 +1,16 @@
+from .generate  import generator
+
+from ..config   import DATAQUEUE
+from ..rabbitmq import channel_init, channel_send
+
 # def generating_sending_loop {{{
 def generating_sending_loop(procs):
 
-    from .rabbitmq import gsl_channel, gsl_send
-    from .generate import generator
-
-    channel = gsl_channel()
+    channel = channel_init(DATAQUEUE)
 
     while True:
         # generate
         data_set = generator(procs=procs)
         # send
-        gsl_send(channel, data_set)
+        channel_send(channel, DATAQUEUE, data_set)
 # }}}
-
-

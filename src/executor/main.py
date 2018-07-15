@@ -2,28 +2,17 @@ import gym
 import os
 from multiprocessing import Manager, Process
 
-from .rabbitmq import recv_data
+from .rabbitmq import data_callback
 from .ttsl     import training_testing_sending_loop
 
-from ..config import cp, ll
+from ..config   import init_conf, DATAQUEUE
+from ..rabbitmq import start_receiver
 
 # global values {{{
 # {{{
 #
 # env:
 #   global reference to our gym environment
-#
-# goal_score:
-#   highscore
-#
-# steps:
-#   is used to loop the actions performed in
-#   model.train_model and generate.generate_data.
-#
-# goal_cons:
-#   how often the agent should reach the goal_score
-#   consecutively before we can say our agent has
-#   solved the environment
 #
 # action_space:
 #   represents the set of actions our agent can
@@ -51,9 +40,6 @@ from ..config import cp, ll
 #
 # }}}
 env          = None
-goal_score   = None
-steps        = None
-goal_cons    = None
 action_space = None
 import_      = None
 m_data_set   = Manager().Lock()
@@ -89,32 +75,18 @@ main_pid     = os.getpid()
 def main(visual, env_name, _model):
 
     global env
-    global goal_score
-    global steps
-    global goal_cons
     global action_space
     global import_
-    global data_set
-    global m_data_set
-    global main_pid
 
-    # set global meta for each environment {{{
     env = gym.make(str(env_name))
     env.reset()
     action_space = env.action_space.n
 
     import_ = _model
 
-    if env_name == cp:
-        goal_score   = 200
-        steps        = 1000
-        goal_cons    = 10
-    elif env_name == ll:
-        goal_score   = 200
-        steps        = 1000
-        goal_cons    = 100
-    # }}}
-
+    # (!) MUST ALWAYS BEEN CALLED BEFORE WORKING WITH THE
+    #     GYM ENVIRONMENT
+    init_conf(env_name)
 
     ttsl = Process(
         target = training_testing_sending_loop,
@@ -122,7 +94,7 @@ def main(visual, env_name, _model):
     )
     ttsl.start()
 
-    recv_data()
+    start_receiver(DATAQUEUE, data_callback)
 # }}}
 
 if __name__ == '__main__':

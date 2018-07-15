@@ -1,13 +1,12 @@
-import pika
 import gym
-import json
 import numpy as np
 from multiprocessing import Manager, Process
 
 from .gsl      import generating_sending_loop
-from .rabbitmq import recv_model
+from .rabbitmq import model_callback
 
-from ..config import cp, ll
+from ..config   import init_conf, MODELEXCHANGE, T_EXCHANGE
+from ..rabbitmq import start_receiver
 
 # global shared model (config and weights) + mutexes
 MDL_CONFIG    = Manager().dict()
@@ -21,57 +20,11 @@ M_MDL_WEIGHTS = Manager().Lock()
 # env_:
 #   global reference to the name of our gym environment.
 #
-# goal_score:
-#   highscore.
-#
-# steps:
-#   is used to loop the actions performed in
-#   model.train_model and generate.generate_data.
-#
-# eps:
-#   episodes that are performed every time in
-#   generate.generate_data (eps * steps actions are
-#   performed).
-#
-# rand_eps:
-#   episodes that are performed by every random generator.
-#
-# gen_rand:
-#   to every proc (generator using our model, not random)
-#   we add some random generators (adds new aspects to our
-#   training data). We add gen_rand many random generators.
-#
-# r_take_eps:
-#   DATA-SANITATION: we take every generated episodes where
-#   the episode's score devided by goal_score  is greater
-#   equal r_takes_eps.
-#
-# r_clean_eps:
-#   DATA-SANITATION: if an episode's score devided by
-#   goal_score is greater equal r_clean_eps we sanitize the
-#   episode's data and take it (if the episode generated a
-#   score lower than r_clean_eps we throw it away).
-#
-# r_clean_cut:
-#   DATA-SANITATION: if the episode's score devided by
-#   goal_score is between r_clean_eps and r_take_eps we
-#   normalize the data of the episode and take only the
-#   steps that generated a single score greater equal
-#   r_clean_cut.
-#
 # gsl:
 #  generate-send-loop process.
 #
 # }}}
 env_         = None
-goal_score   = None
-steps        = None
-eps          = None
-rand_eps     = None
-gen_rand     = None
-r_take_eps   = None
-r_clean_eps  = None
-r_clean_cut  = None
 gsl          = None
 # }}}
 
@@ -94,38 +47,13 @@ gsl          = None
 def main(env_name, procs):
 
     global env_
-    global goal_score
-    global steps
-    global eps
-    global gen_rand
-    global rand_eps
-    global r_take_eps
-    global r_clean_eps
-    global r_clean_cut
     global gsl
 
-    # set global meta for each environment {{{
     env_ = env_name
 
-    if env_name == cp:
-        goal_score   = 200
-        steps        = 1000
-        eps          = 1000
-        rand_eps     = 2000
-        gen_rand     = 1
-        r_take_eps   = 0.95
-        r_clean_eps  = 0.2
-        r_clean_cut  = -1
-    elif env_name == ll:
-        goal_score   = 200
-        steps        = 1000
-        eps          = 40000
-        rand_eps     = 40000
-        gen_rand     = procs
-        r_take_eps   = 0
-        r_clean_eps  = -3
-        r_clean_cut  = 0.4
-    # }}}
+    # (!) MUST ALWAYS BEEN CALLED BEFORE WORKING WITH THE
+    #     GYM ENVIRONMENT
+    init_conf(env_name)
 
     # spawn generating-sending loop
     gsl = Process(
@@ -134,7 +62,7 @@ def main(env_name, procs):
     )
     gsl.start()
 
-    recv_model()
+    start_receiver(MODELEXCHANGE, model_callback, T_EXCHANGE)
 # }}}
 
 if __name__ == '__main__':

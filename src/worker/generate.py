@@ -20,7 +20,7 @@ GEN_MDL = 1
 # }}}
 def generator(procs = 1, data_set = []):
 
-    from .main import eps, gen_rand, rand_eps
+    from ..config import eps, gen_rand, rand_eps
 
     # start the processes and await their
     # return values before returning the
@@ -73,15 +73,16 @@ def _generator(id, n, proc_type=GEN_RND):
     import keras.backend as K
 
     from .main import env_,         \
-                      steps,        \
-                      goal_score,   \
-                      r_take_eps,   \
-                      r_clean_eps,  \
-                      r_clean_cut,  \
                       MDL_CONFIG,   \
                       M_MDL_CONFIG, \
                       MDL_WEIGHTS,  \
                       M_MDL_WEIGHTS
+
+    from ..config import steps,        \
+                         goal_score,   \
+                         r_take_eps,   \
+                         r_clean_eps,  \
+                         r_clean_cut
     # }}}
 
     # start tf session {{{

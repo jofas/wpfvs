@@ -2,18 +2,22 @@ import os
 import signal
 import numpy as np
 
+from .model    import train_model, test_model
+
 from ..config import MSG_CONFIG,    \
                      MSG_WEIGHTS,   \
-                     MSG_DONE
+                     MSG_DONE,      \
+                     MODELEXCHANGE, \
+                     T_EXCHANGE
+
+from ..rabbitmq import channel_init, channel_send
 
 # def training_testing_sending_loop {{{
 def training_testing_sending_loop(visual):
 
     from .main import data_set, m_data_set, main_pid
-    from .model    import train_model, test_model
-    from .rabbitmq import ttsl_channel, ttsl_send
 
-    channel = ttsl_channel()
+    channel = channel_init(MODELEXCHANGE, T_EXCHANGE)
 
     X         = []
     y         = []
@@ -78,7 +82,12 @@ def training_testing_sending_loop(visual):
 
                     conf_send = True
 
-            ttsl_send(channel, body)
+            channel_send(
+                channel,
+                MODELEXCHANGE,
+                body,
+                T_EXCHANGE
+            )
 
             test = False
 
