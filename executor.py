@@ -17,5 +17,5 @@ if args.visual == None:
 main(
     visual   = args.visual,
     env_name = args.env,
-    _model   = args.model,
+    model   = args.model,
 )

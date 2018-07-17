@@ -1,6 +1,7 @@
 import os
 import signal
 import numpy as np
+from time import time, gmtime, sleep
 
 from .model    import train_model, test_model
 
@@ -15,7 +16,7 @@ from ..rabbitmq import channel_init, channel_send
 # def training_testing_sending_loop {{{
 def training_testing_sending_loop(visual):
 
-    from .main import data_set, m_data_set, main_pid
+    from .main import data_set, m_data_set
 
     channel = channel_init(MODELEXCHANGE, T_EXCHANGE)
 
@@ -24,7 +25,7 @@ def training_testing_sending_loop(visual):
     conf_send = False
     model     = None
     test      = False
-
+    loop      = 0
 
     # loop {{{
     while True:
@@ -61,6 +62,7 @@ def training_testing_sending_loop(visual):
 
         m_data_set.release()
 
+        # testing + sending {{{
         if test:
             print('testing...')
             (done, score, cons) = test_model(visual, model)
@@ -90,12 +92,56 @@ def training_testing_sending_loop(visual):
             )
 
             test = False
+            loop += 1
 
+            # finished {{{
             if done:
-                # TODO: dump protocol here
+                from .main import protocol, t_start, \
+                                  main_pid, meta_pid
+                from ..config import env_name, model_name
+
+                protocol['time']  = time()-t_start
+                protocol['loops'] = loop
+                protocol['env']   = env_name
+                protocol['model'] = model_name
+                protocol['data'] = X.shape[0]
+
                 print('done!')
-                os.kill(main_pid, signal.SIGKILL)
+
+                # wait for every worker to send his proto-
+                # col
+                sleep(60)
+
+                # dump the protocol to file {{{
+                gm_time = gmtime()
+
+                file = open(
+                    "{}/protocols/{}_{}_{}_{}_{}_{}_{}.json" \
+                    .format(
+                        os.environ['WPFVS_HOME'],
+                        protocol['env'],
+                        protocol['model'],
+                        gm_time.tm_year,
+                        gm_time.tm_mon,
+                        gm_time.tm_mday,
+                        gm_time.tm_hour,
+                        gm_time.tm_min
+                    ),
+                    'w+'
+                )
+                file.write(
+                    json.dumps(
+                        protocol, sort_keys=True, indent=2
+                    )
+                )
+                # }}}
+
+                # kill the executoner (main, meta and ttsl)
+                os.kill(meta_pid,    signal.SIGKILL)
+                os.kill(main_pid,    signal.SIGKILL)
                 os.kill(os.getpid(), signal.SIGKILL)
+            # }}}
+        # }}}
     # }}}
 # }}}
 

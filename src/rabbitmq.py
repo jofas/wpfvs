@@ -3,7 +3,7 @@ import json
 from .config import HOST, T_QUEUE
 
 # def start_receiver {{{
-def start_receiver(qx, callback, type=T_QUEUE):
+def start_receiver(qx,callback,type=T_QUEUE):
     connection = _connect_rmq()
     channel = connection.channel()
 

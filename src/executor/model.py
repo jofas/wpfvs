@@ -5,18 +5,11 @@ import numpy as np
 from concurrent import futures
 
 # def train_model {{{
-# {{{
-#
-# data:
-#   the data set used for training
-#   our model
-#
-# }}}
 def train_model(X, y, model=None):
 
-    from .main import import_
+    from ..config import model_name
 
-    if import_ == None:
+    if model_name == None:
         raise Exception(
             'Model to import is not defined'
         )
@@ -25,7 +18,7 @@ def train_model(X, y, model=None):
         # initialize model
         print('initializing model...')
         model = importlib.import_module(
-            'models.'+import_
+            'models.'+model_name
         ).model(
             input_size = len(X[0]),
             output_size = len(y[0])

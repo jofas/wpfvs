@@ -1,10 +1,11 @@
 # global config
 
-# rabbitmq meta
+# rabbitmq
 HOST          = 'localhost'
 DATAQUEUE     = 'data_queue'
 MODELEXCHANGE = 'model_exchange'
 METAEXCHANGE  = 'meta_exchange'
+METAQUEUE     = 'meta_queue'
 
 # channel types
 T_QUEUE    = 0
@@ -13,6 +14,7 @@ T_EXCHANGE = 1
 # message types for receiving
 MSG_CONFIG  = 0
 MSG_WEIGHTS = 1
+# (!) DEPRECATED
 MSG_DONE    = 2
 
 # supported environments
@@ -21,6 +23,12 @@ ll = 'LunarLander-v2'
 
 # cofing for the environment {{{
 # {{{
+#
+# env_name:
+#   string representation of our gym environment.
+#
+# model_name:
+#   name of our model (e.g. 64x64).
 #
 # goal_score:
 #   highscore
@@ -66,6 +74,8 @@ ll = 'LunarLander-v2'
 #   r_clean_cut.
 #
 # }}}
+env_name     = None
+model_name   = None
 goal_score   = None
 steps        = None
 goal_cons    = None
@@ -77,9 +87,11 @@ r_clean_eps  = None
 r_clean_cut  = None
 # }}}
 
-def init_conf(env):
+# def init_conf {{{
+def init_conf(env, model=None):
     global cp
     global ll
+    global env_name
     global goal_score
     global steps
     global goal_cons
@@ -90,6 +102,9 @@ def init_conf(env):
     global r_take_eps
     global r_clean_eps
     global r_clean_cut
+    global model_name
+
+    env_name = env
 
     if env == cp:
         goal_score   = 200
@@ -97,7 +112,7 @@ def init_conf(env):
         goal_cons    = 10
         eps          = 1000
         rand_eps     = 2000
-        gen_rand     = 1
+        gen_rand     = 3
         r_take_eps   = 0.95
         r_clean_eps  = 0.2
         r_clean_cut  = -1
@@ -105,11 +120,14 @@ def init_conf(env):
         goal_score   = 200
         steps        = 1000
         goal_cons    = 100
-        eps          = 40000
-        rand_eps     = 40000
-        gen_rand     = procs
+        eps          = 100
+        rand_eps     = 100
+        gen_rand     = 5
         r_take_eps   = 0
         r_clean_eps  = -3
         r_clean_cut  = 0.4
     else:
         raise Exception('INVALID ENVIRONMENT')
+
+    if model != None: model_name = model
+# }}}

@@ -21,6 +21,7 @@ GEN_MDL = 1
 def generator(procs = 1, data_set = []):
 
     from ..config import eps, gen_rand, rand_eps
+    from .main    import generated_data
 
     # start the processes and await their
     # return values before returning the
@@ -45,7 +46,14 @@ def generator(procs = 1, data_set = []):
 
         # await the return
         for f in futures.as_completed(fs):
-            data_set += f.result()
+
+            r = f.result()
+
+            # safe the amount of data generated for the
+            # protocol
+            generated_data += len(r)
+
+            data_set += r
 
     return data_set
 # }}}
@@ -72,8 +80,7 @@ def _generator(id, n, proc_type=GEN_RND):
     from keras.models import model_from_json
     import keras.backend as K
 
-    from .main import env_,         \
-                      MDL_CONFIG,   \
+    from .main import MDL_CONFIG,   \
                       M_MDL_CONFIG, \
                       MDL_WEIGHTS,  \
                       M_MDL_WEIGHTS
@@ -82,7 +89,8 @@ def _generator(id, n, proc_type=GEN_RND):
                          goal_score,   \
                          r_take_eps,   \
                          r_clean_eps,  \
-                         r_clean_cut
+                         r_clean_cut,  \
+                         env_name
     # }}}
 
     # start tf session {{{
@@ -93,7 +101,7 @@ def _generator(id, n, proc_type=GEN_RND):
         K.set_session(s)
 
         # generate local env to avoid race conditions
-        _env = gym.make(env_)
+        _env = gym.make(env_name)
         _env.reset()
         action_space = _env.action_space.n
 

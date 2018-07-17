@@ -2,10 +2,10 @@ import gym
 import os
 from multiprocessing import Manager, Process
 
-from .rabbitmq import data_callback
+from .rabbitmq import data_callback, meta_callback
 from .ttsl     import training_testing_sending_loop
 
-from ..config   import init_conf, DATAQUEUE
+from ..config   import init_conf, DATAQUEUE, METAQUEUE
 from ..rabbitmq import start_receiver
 
 # global values {{{
@@ -20,13 +20,6 @@ from ..rabbitmq import start_receiver
 #   an integer n and the actions the agent can perform
 #   are 0, 1, ..., n-1
 #
-# import_:
-#   name of the import module located
-#   at $WPFVS_HOME/models.
-#   Every module there has a function
-#   model(input_size, output_size) that
-#   returns a compiled Keras model
-#
 # m_data_set:
 #   mutex for data_set.
 #
@@ -38,13 +31,21 @@ from ..rabbitmq import start_receiver
 #   process id of the main process (needed in ttsl process
 #   for killing it).
 #
+# meta_pid:
+#   process id of the meta process (needed in ttsl process
+#   for killing it).
+#
 # }}}
 env          = None
 action_space = None
-import_      = None
+
 m_data_set   = Manager().Lock()
 data_set     = Manager().list()
+
 main_pid     = os.getpid()
+meta_pid     = None
+
+protocol     = {}
 # }}}
 
 # def main {{{
@@ -62,7 +63,7 @@ main_pid     = os.getpid()
 #   cp und ll can be used (others may as
 #   well, but aren't jet tested)
 #
-# _model:
+# model:
 #   defines which neural net is imported from
 #   $WPFVS_HOME/models. Every module in models
 #   has a model-function which returns a compiled
@@ -72,21 +73,34 @@ main_pid     = os.getpid()
 #   train_model
 #
 # }}}
-def main(visual, env_name, _model):
+def main(visual, env_name, model):
 
     global env
     global action_space
-    global import_
+    global meta_pid
 
     env = gym.make(str(env_name))
     env.reset()
     action_space = env.action_space.n
 
-    import_ = _model
+    # throw error if $WPFVS_HOME is not set
+    if not 'WPFVS_HOME' in os.environ:
+        raise Exception(
+            'ENVIRONMENT VARIABLE WPFVS_HOME is not set'
+        )
 
     # (!) MUST ALWAYS BEEN CALLED BEFORE WORKING WITH THE
     #     GYM ENVIRONMENT
-    init_conf(env_name)
+    init_conf(env_name, model)
+
+    # start process receiving on METAQUEUE and answering on
+    # METAEXCHANGE.
+    meta = Process(
+        target = start_receiver,
+        args   = (METAQUEUE, meta_callback)
+    )
+    meta.start()
+    meta_pid = meta.pid
 
     ttsl = Process(
         target = training_testing_sending_loop,
@@ -94,6 +108,8 @@ def main(visual, env_name, _model):
     )
     ttsl.start()
 
+    # use main to receive new data which was send by a wor-
+    # ker.
     start_receiver(DATAQUEUE, data_callback)
 # }}}
 
