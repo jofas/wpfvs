@@ -4,25 +4,22 @@
 
 1. install dependencies:
   
-  - tensorflow: <code>pip install tensorflow</code>
+  - tensorflow: <code>sudo pip3 install tensorflow</code>
 
-  - keras: <code>pip install keras</code>
+  - keras: <code>sudo pip3 install keras</code>
+  
+  - pika: <code>sudo pip3 install pika</code>
   
   - gym:
-  
+    
+    + <code> brew install cmake boost boost-python sdl2 swig wget </code>
+    
     + <code> git clone https://github.com/openai/gym </code>
       
     + <code> cd gym </code>
   
-    + <code> pip install -e '.[all]' </code>
-
-2. execute: 
-
-  - Set WPFVS\_HOME variable: <code>soucre .env</code>
-
-  - start program with: <code>python3 run.py</code>
+    + <code> sudo pip3 install -e '.[all]' </code>
  
-## todo
 
 ### doc
 
