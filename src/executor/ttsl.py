@@ -1,5 +1,6 @@
 import os
 import signal
+import json
 import numpy as np
 from time import time, gmtime, sleep
 
@@ -16,7 +17,7 @@ from ..rabbitmq import channel_init, channel_send
 # def training_testing_sending_loop {{{
 def training_testing_sending_loop(visual):
 
-    from .main import data_set, m_data_set
+    from .main import data_set, m_data_set, reset_lock
 
     channel = channel_init(MODELEXCHANGE, T_EXCHANGE)
 
@@ -31,36 +32,44 @@ def training_testing_sending_loop(visual):
     while True:
         body = {}
 
-        m_data_set.acquire()
-        if len(data_set) > 0:
-            print('training...')
+        try:
+            m_data_set.acquire()
+            if len(data_set) > 0:
+                print('starting training...')
+            
+                # parse the training data to an
+                # input format Keras can use for
+                # training
+                print('parsing data_set for training...')
+                if len(X) > 0:
+                    X = np.concatenate((
+                        X,
+                        np.array([i['obs']    for i in data_set])
+                    ))
+                else:
+                    X = np.array([i['obs']    for i in data_set])
 
-            # parse the training data to an
-            # input format Keras can use for
-            # training
-            print('parsing data_set for training...')
-            if len(X) > 0:
-                X = np.concatenate((
-                    X,
-                    np.array([i['obs']    for i in data_set])
-                ))
-            else:
-                X = np.array([i['obs']    for i in data_set])
+                if len(y) > 0:
+                    y = np.concatenate((
+                        y,
+                        np.array([i['action'] for i in data_set])
+                    ))
+                else:
+                    y = np.array([i['action'] for i in data_set])
 
-            if len(y) > 0:
-                y = np.concatenate((
-                    y,
-                    np.array([i['action'] for i in data_set])
-                ))
-            else:
-                y = np.array([i['action'] for i in data_set])
+                del(data_set[:])
+            m_data_set.release()
+        except TypeError:
+            print('TypeError while trying to use data_set')
+            print(data_set)
+        #except BrokenPipeError:
+        #    print('BrokenPipeError')
+        #    reset_lock()
+            
 
-            del(data_set[:])
-
+        if len(X) > 0:    
             model = train_model(X, y, model=model)
             test = True
-
-        m_data_set.release()
 
         # testing + sending {{{
         if test:
@@ -83,7 +92,7 @@ def training_testing_sending_loop(visual):
                     body['model'] = model.to_json()
 
                     conf_send = True
-
+            
             channel_send(
                 channel,
                 MODELEXCHANGE,
@@ -134,9 +143,11 @@ def training_testing_sending_loop(visual):
                         protocol, sort_keys=True, indent=2
                     )
                 )
+
+                print(protocol)
                 # }}}
 
-                # kill the executoner (main, meta and ttsl)
+                # kill the executioner (main, meta and ttsl)
                 os.kill(meta_pid,    signal.SIGKILL)
                 os.kill(main_pid,    signal.SIGKILL)
                 os.kill(os.getpid(), signal.SIGKILL)

@@ -1,7 +1,7 @@
 # global config
 
 # rabbitmq
-HOST          = 'localhost'
+HOST          = '10.0.0.9'
 DATAQUEUE     = 'data_queue'
 MODELEXCHANGE = 'model_exchange'
 METAEXCHANGE  = 'meta_exchange'
@@ -14,7 +14,6 @@ T_EXCHANGE = 1
 # message types for receiving
 MSG_CONFIG  = 0
 MSG_WEIGHTS = 1
-# (!) DEPRECATED
 MSG_DONE    = 2
 
 # supported environments

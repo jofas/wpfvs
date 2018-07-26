@@ -10,7 +10,7 @@ worker_id    = 0
 def data_callback(ch,method,properties,body):
 
     from .main import data_set, m_data_set
-
+    print('Hallo aus data_callback')
     m_data_set.acquire()
     data_set += json.loads(body.decode())
     m_data_set.release()
@@ -28,6 +28,8 @@ def meta_callback(ch,method,properties,body):
     body = json.loads(body.decode())
 
     if 'env' in body:
+        meta_channel = channel_init(METAEXCHANGE, T_EXCHANGE)
+        
         channel_send(
             meta_channel,
             METAEXCHANGE,
