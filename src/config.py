@@ -124,7 +124,7 @@ def init_conf(env, model=None):
         gen_rand     = 10
         r_take_eps   = 0
         r_clean_eps  = -3
-        r_clean_cut  = 0.4
+        r_clean_cut  = 0.9
     else:
         raise Exception('INVALID ENVIRONMENT')
 
