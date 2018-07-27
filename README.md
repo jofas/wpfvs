@@ -1,8 +1,10 @@
 # wpfvs
 
 ## execute
-
-1. install dependencies:
+  
+  - wpfvs: <code>git clone https://github.com/jofas/wpfvs</code>
+  
+  - <code>source wpfvs/STUFF</code>
   
   - tensorflow: <code>sudo pip3 install tensorflow</code>
 
