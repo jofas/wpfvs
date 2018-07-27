@@ -12,7 +12,7 @@
   
   - gym:
     
-    + <code> brew install cmake boost boost-python sdl2 swig wget </code>
+    + <code> brew install cmake boost boost-python sdl2 swig@3.04 wget </code>
     
     + <code> git clone https://github.com/openai/gym </code>
       
@@ -20,6 +20,7 @@
   
     + <code> sudo pip3 install -e '.[all]' </code>
  
+    + <code> sudo pip3 install box2d box2d-kengz </code>
 
 ### doc
 
