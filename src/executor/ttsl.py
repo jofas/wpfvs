@@ -140,7 +140,7 @@ def training_testing_sending_loop(visual):
                 )
                 file.write(
                     json.dumps(
-                        protocol, sort_keys=True, indent=2
+                        dict(protocol), sort_keys=True, indent=2
                     )
                 )
 

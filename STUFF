@@ -1,0 +1,2 @@
+export PATH=$PATH:/usr/local/Cellar/rabbitmq/3.7.7/sbin
+export PATH=$PATH:/usr/local/Cellar/swig\@3.04/3.0.4/bin
