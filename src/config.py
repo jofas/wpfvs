@@ -123,7 +123,7 @@ def init_conf(env, model=None):
         rand_eps     = 10000
         gen_rand     = 10
         r_take_eps   = 0
-        r_clean_eps  = -3
+        r_clean_eps  = -0.25
         r_clean_cut  = 0.9
     else:
         raise Exception('INVALID ENVIRONMENT')
