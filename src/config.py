@@ -119,11 +119,11 @@ def init_conf(env, model=None):
         goal_score   = 200
         steps        = 1000
         goal_cons    = 100
-        eps          = 5000
+        eps          = 1000
         rand_eps     = 10000
         gen_rand     = 10
-        r_take_eps   = 0.5   # 100
-        r_clean_eps  = 0.25 # -50
+        r_take_eps   = 0.95 # 190
+        r_clean_eps  = 0.75 # 150
         r_clean_cut  = 0.0
     else:
         raise Exception('INVALID ENVIRONMENT')
