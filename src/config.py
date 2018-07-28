@@ -56,7 +56,7 @@ ll = 'LunarLander-v2'
 #
 # r_take_eps:
 #   DATA-SANITATION: we take every generated episodes where
-#   the episode's score devided by goal_score  is greater
+#   the episode's score devided by goal_score is greater
 #   equal r_takes_eps.
 #
 # r_clean_eps:
@@ -119,12 +119,12 @@ def init_conf(env, model=None):
         goal_score   = 200
         steps        = 1000
         goal_cons    = 100
-        eps          = 5000
+        eps          = 1000
         rand_eps     = 10000
         gen_rand     = 10
-        r_take_eps   = 0
-        r_clean_eps  = -3
-        r_clean_cut  = 0.4
+        r_take_eps   = 0.95 # 190
+        r_clean_eps  = 0.75 # 150
+        r_clean_cut  = 0.0
     else:
         raise Exception('INVALID ENVIRONMENT')
 
