@@ -1,0 +1,31 @@
+\definecolor{rabbitmqcolor}{HTML}{FF6600}
+
+\def\RabbitMQ#1#2{
+  \begin{scope}[#2]
+    \draw [rabbitmqcolor, fill=rabbitmqcolor]
+      ($(#1)-(2,2)$) rectangle ($(#1)+(3,1)$);
+    \draw [rabbitmqcolor, fill=rabbitmqcolor]
+      ($(#1)-(2,2)$) rectangle ($(#1)+(-1,3)$);
+    \draw [rabbitmqcolor, fill=rabbitmqcolor]
+      (#1) rectangle ($(#1)+(1,3)$);
+    \draw [white, fill=white]
+      ($(#1)+(1,-1)$) rectangle ($(#1)+(2,0)$);
+  \end{scope}
+}
+
+\def\PCIcon#1#2{
+  \begin{scope}[#2]
+    \draw [codebordercolor, fill=codebordercolor]
+      ($(#1)-(2,4)$) rectangle ($(#1)+(2,6)$);
+    \draw [white, fill=white]
+      (#1) circle (.5cm);
+    \draw [white, fill=white]
+      ($(#1)-(0,2)$) circle (.25cm);
+    \draw [white, fill=white]
+      ($(#1)+(-1.75,5.5)$) rectangle ($(#1)+(1.75,5)$);
+    \draw [white, fill=white]
+      ($(#1)+(-1.75,4.5)$) rectangle ($(#1)+(1.75,4)$);
+    \draw [white, fill=white]
+      ($(#1)+(-1.75,3.5)$) rectangle ($(#1)+(1.75,3)$);
+  \end{scope}
+}

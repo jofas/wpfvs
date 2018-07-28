@@ -1,0 +1,23 @@
+	\begin{figure}[H]
+		\begin{center}
+			\begin{tikzpicture}[dot/.style={circle,draw,thick,fill=green!20,minimum size=1cm}]
+				\node at (5,0) (out) {};
+				\node at (0,0) [dot] (neuron) {$t=\sum_{i=1}^{n}{w_ix_i}+b$}
+					edge[->,thick] node[above]{$\varphi(t)$} (out);
+				\node at (-4,4) [dot] {$1$}
+					edge[->,thick] node[anchor=south west]{$b=-\theta$} (neuron);
+				\node at (-4,2) [dot] {$x_1$}
+					edge[->,thick] (neuron);
+				\node at (-4,0) [dot] {$x_2$}
+					edge[->,thick] (neuron);
+				\node at (-4,-4) [dot] {$x_n$}
+					edge[->,thick] (neuron);
+				\node at (-4,-1.5) [tokens=1] {};
+				\node at (-4,-2) [tokens=1] {};
+				\node at (-4,-2.5) [tokens=1] {};
+			\end{tikzpicture}
+		\end{center}
+    \caption{An artificial neuron with bias}
+    %\label{bn}
+	\end{figure}
+

@@ -1,0 +1,236 @@
+\documentclass[12pt, twoside]{article}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage[colorlinks=true, linkcolor=black]{hyperref} % Links
+\usepackage{makeidx} % Indexierung
+\usepackage{siunitx}
+\usepackage[english]{babel} % deutsche Sonderzeichen
+\usepackage[utf8]{inputenc}
+\usepackage{geometry} % Dokumentendesign wie Seiten- oder Zeilenabstand bestimmen
+\usepackage[toc,page]{appendix}
+
+% Graphiken
+\usepackage{tikz}
+\usepackage{pgfplots}
+\usepackage{pgfcore}
+\usepackage{pgfopts}
+\usepackage{pgfornament}
+\usepackage{pgf}
+\usepackage{ifthen}
+\usepackage{booktabs}
+
+% Tabellen
+\usepackage{tabu}
+\usepackage{longtable}
+\usepackage{colortbl} % Tabellen faerben
+\usepackage{multirow}
+\usepackage{diagbox} % Tabellenzelle diagonal splitten
+
+\usepackage{xcolor} % Farben
+\usepackage[framemethod=tikz]{mdframed} % Hintergrunderstellung
+\usepackage{enumitem} % Enumerate mit Buchstaben nummerierbar machen
+\usepackage{pdfpages}
+\usepackage{listings} % Source-Code darstellen
+\usepackage{eurosym} % Eurosymbol
+\usepackage[square,numbers]{natbib}
+\usepackage{here} % figure an richtiger Stelle positionieren
+\usepackage{verbatim} % Blockkommentare mit \begin{comment}...\end{comment}
+\usepackage{ulem} % \sout{} (durchgestrichener Text)
+
+% BibLaTex
+\bibliographystyle{acm}
+
+% Aendern des Anhangnamens (Seite und Inhaltsverzeichnis)
+%\renewcommand\appendixtocname{Anhang}
+%\renewcommand\appendixpagename{Anhang}
+
+% mdframed Style
+\mdfdefinestyle{codebox}{
+	linewidth=2.5pt,
+	linecolor=codebordercolor,
+	backgroundcolor=codecolor,
+	shadow=true,
+	shadowcolor=black!40!white,
+	fontcolor=black,
+	everyline=true,
+}
+
+% Seitenabstaende
+\geometry{left=15mm,right=15mm,top=15mm,bottom=20mm}
+
+% TikZ Bibliotheken
+\usetikzlibrary{
+    arrows,
+    arrows.meta,
+    decorations,
+    backgrounds,
+    positioning,
+    fit,
+    petri,
+    shadows,
+    datavisualization.formats.functions,
+    calc,
+    shapes,
+    shapes.multipart
+}
+
+\pgfplotsset{width=7cm,compat=1.15}
+
+\definecolor{codecolor}{HTML}{EEEEEE}
+\definecolor{codebordercolor}{HTML}{CCCCCC}
+
+% Standardeinstellungen fuer Source-Code
+\lstset{
+    language=C,
+    breaklines=true,
+    keepspaces=true,
+    keywordstyle=\bfseries\color{green!70!black},
+    basicstyle=\ttfamily\color{black},
+    commentstyle=\itshape\color{purple},
+    identifierstyle=\color{blue},
+    stringstyle=\color{orange},
+    showstringspaces=false,
+    rulecolor=\color{black},
+    tabsize=2,
+    escapeinside={\%*}{*\%},
+}
+
+\input{libuml}
+%\input{liberm}
+\input{diagrams/icons}
+
+\begin{document}
+
+% Custom Titelseite {{{
+\begin{titlepage}
+	\begin{center}
+		{\Huge{\textbf{WPF Verteilte Systeme}}} \\
+	\vspace{3cm}
+		{\Huge{\textbf{A distributed Architecture for training
+      a Deep Learning Agent}}} \\
+%	\vspace{3cm}
+%		{\Huge{Einleitung}} \\
+	\vspace{2cm}
+		\huge{Jonas Fa{\ss}bender} \\
+	\vspace{.5cm}
+		\huge{Amjad ...} \\
+	\vspace{.5cm}
+		\huge{Hamza ...} \\
+	\vspace{.5cm}
+		\huge{David ...}
+	\end{center}
+%
+%  % ornaments {{{
+%  \begin{tikzpicture}[remember picture, overlay]
+%
+%    % Unterstrich der Ueberschrift {{{
+%    \node
+%    at ($(current page.north)-(0,2.8)$)
+%    {\pgfornament[width=15cm,height=.2cm]{89}};
+%    % }}}
+%
+%    % Ruder {{{
+%    \node[text opacity=.1]
+%    at (current page.center)
+%    {\pgfornament[scale=3]{4}};
+%    % }}}
+%
+%    % Ecken {{{
+%
+%    % obere linke Ecke {{{
+%    \node[text opacity=.1]
+%    at ($(current page.north west)-(-2.2,2.2)$)
+%    {\pgfornament{39}};
+%    % }}}
+%
+%    % untere linke Ecke {{{
+%    \node[text opacity=.1,rotate=90]
+%    at ($(current page.south west)+(2.2,2.2)$)
+%    {\pgfornament{39}};
+%    % }}}
+%
+%    % untere rechte Ecke {{{
+%    \node[text opacity=.1,rotate=180]
+%    at ($(current page.south east)+(-2.2,2.2)$)
+%    {\pgfornament{39}};
+%    % }}}
+%
+%    % obere rechte Ecke {{{
+%    \node[text opacity=.1,rotate=270]
+%    at ($(current page.north east)-(2.2,2.2)$)
+%    {\pgfornament{39}};
+%    % }}}
+%
+%    % }}}
+%
+%    % Seiten {{{
+%
+%    % obere Seite {{{
+%    \node[text opacity=.1]
+%    at ($(current page.north)-(0,1)$)
+%    {\pgfornament[width=12cm]{87}};
+%    % }}}
+%
+%    % unter Seite {{{
+%    \node[text opacity=.1]
+%    at ($(current page.south)+(0,1)$)
+%    {\pgfornament[width=12cm]{87}};
+%    % }}}
+%
+%    % linke Seite {{{
+%    \node[text opacity=.1,rotate=90]
+%    at ($(current page.west)+(1.5,0)$)
+%    {\pgfornament[width=18cm]{87}};
+%    % }}}
+%
+%    % rechte Seite {{{
+%    \node[text opacity=.1,rotate=90]
+%    at ($(current page.east)-(1.5,0)$)
+%    {\pgfornament[width=18cm]{87}};
+%    % }}}
+%
+%    % }}}
+%
+%  \end{tikzpicture}
+%  % }}}
+%
+\end{titlepage}
+% }}}
+
+\tableofcontents
+\newpage
+\listoffigures
+
+\include{./introduction}
+\include{./technologies/technologies}
+\include{./app/app}
+
+hallo \cite{ct_math,bio}
+
+\bibliography{wpfvs_bib}
+
+%stuff to write about:
+%
+%\begin{itemize}
+%
+%  \item gym
+%
+%  \item architecture (8-10ps) (network (queues, exchanges,
+%    etc.), generator and executor (algorithm for data
+%    sanitation))
+%
+%  \item results (incl.\ difficulties (bottleneck data parsing))
+%
+%  \item where to go (loadbalancing, dynamic setting)
+%
+%\end{itemize}
+%
+%\begin{tikzpicture}
+%  \node at (0,0) (n) {};
+%  \RabbitMQ{n}{scale=.2}
+%
+%  \node at (0,-2) (m) {};
+%  \PCIcon{m}{scale=.2}
+%\end{tikzpicture}
+
+\end{document}

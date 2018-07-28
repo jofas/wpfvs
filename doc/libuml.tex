@@ -1,0 +1,979 @@
+%
+% Tikz-library for UML
+%
+
+% Arrow tips {{{
+
+  % umlaggreg {{{
+  \tikzset{
+    umlaggreg /.tip = {Diamond[fill=white,scale=1.75]}
+  }
+  % }}}
+
+  % umlcompo {{{
+  \tikzset{
+    umlcompo /.tip = {Diamond[fill=black,scale=1.75]}
+  }
+  % }}}
+
+  % umlgeneral {{{
+  \tikzset{
+    umlgeneral /.tip = {Triangle[fill=white,scale=1.75]}
+  }
+  % }}}
+
+  % umlportprovider {{{
+  \tikzset{
+    umlportprovider /.tip = {Circle[
+      length=8pt,
+      width=8pt,
+      fill=white
+    ]}
+  }
+  % }}}
+
+  % umlportproviderREST {{{
+  \tikzset{
+    umlportproviderREST /.tip = {Circle[
+      length=8pt,
+      width=8pt,
+      fill=blue
+    ]}
+  }
+  % }}}
+
+  % umlportproviderEvent {{{
+  \tikzset{
+    umlportproviderEvent /.tip = {Circle[
+      length=8pt,
+      width=8pt,
+      fill=red
+    ]}
+  }
+  % }}}
+
+  % umlportcaller {{{
+  \tikzset{
+    umlportcaller /.tip = {Arc Barb[
+      reversed,
+      length=3pt,
+      width=8pt
+    ]}
+  }
+  % }}}
+
+% }}}
+
+% Use-case {{{
+\tikzset{
+  usecase/.style={
+    ellipse,
+    fill=blue!20,
+    align=center,
+    draw
+  }
+}
+% }}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%UML Component Token
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\def\UMLComponentToken#1#2#3{
+	\draw [#3]($(#1.north east)-(0.1,0.1)$) rectangle ($(#1.north east)-(0.3,0.45)$);
+	\draw [#3,fill=#2]($(#1.north east)-(0.35,0.2)$) rectangle ($(#1.north east)-(0.25,0.25)$);
+	\draw [#3,fill=#2]($(#1.north east)-(0.35,0.3)$) rectangle ($(#1.north east)-(0.25,0.35)$);
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%UML Component
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%USAGE:
+% 	\UMLComponent{name}{width}{height}{Position eines Ports und Beschreibender UMLNote in der Form:
+%																				positionPort/noteX/noteY/noteText/noteColor
+%
+%BEISPIEL:
+%		\UMLComponent{Bestellvorgang}{\linewidth-0.2cm}{15cm}{
+%			Bestellvorgang.east/7/1.5/Bestellvorgang ausf\"uhren/yellow!25,
+%			Bestellvorgang.south/-2/-6/Blah/yellow!25,
+%			Bestellvorgang.310/7/-6/Blahhh/yellow!25
+%		}
+\def\UMLComponent#1#2#3#4{
+	\node [rectangle split, rectangle split parts = 2,rectangle split empty part height=#3,draw,fill=yellow!25,inner ysep=7pt,inner xsep=15pt,minimum size=#2] at(0,0) (#1) {#1 \nodepart{second}};
+	\UMLComponentToken{#1}{yellow!25}{}
+	\foreach \port/\notex/\notey/\notetext/\notecolor in {#4}{
+		\UMLNote{\notex}{\notey}{\notetext}{\port}{\notecolor};
+		\draw[fill=yellow!25] ($(\port) - (.2,.2)$) rectangle ($(\port)+(.2,.2)$);
+	};
+}
+
+% UML Simple Component {{{
+
+% 1. x
+% 2. y
+% 3. text/name
+% 4. options
+\def\UMLSComponent#1#2#3#4{
+	\node[
+    rectangle split,
+    rectangle split parts = 2,
+    rectangle split empty part height=1cm,
+    draw,
+    fill=yellow!25,
+    inner ysep=7pt,
+    inner xsep=15pt,
+    #4
+  ] at(#1,#2) (#3) {#3 \nodepart{second}};
+	\UMLComponentToken{#3}{yellow!25}{}
+}
+
+% 1. Relative to
+% 2. Text/Name
+% 3. Options
+\def\UMLSComponentRelativeTo#1#2#3{
+	\node[
+    rectangle split,
+    rectangle split parts = 2,
+    rectangle split empty part height=1cm,
+    draw,
+    fill=yellow!25,
+    inner ysep=7pt,
+    inner xsep=15pt,
+    #1,
+    #3
+  ] (#2) {#2 \nodepart{second}};
+	\UMLComponentToken{#2}{yellow!25}{}
+}
+
+% 1. Relative to
+% 2. Text
+% 3. Name
+% 4. Options
+\def\UMLSComponentRelativeToAlterName#1#2#3#4{
+	\node[
+    rectangle split,
+    rectangle split parts = 2,
+    rectangle split empty part height=1cm,
+    draw,
+    fill=yellow!25,
+    inner ysep=7pt,
+    inner xsep=15pt,
+    #1,
+    #4
+  ] (#3) {#2 \nodepart{second}};
+	\UMLComponentToken{#3}{yellow!25}{}
+}
+
+% 1. Relative to
+% 2. Text
+% 3. Name
+% 4. Options
+\def\UMLSComponentRelativeToAlterName#1#2#3#4{
+	\node [rectangle split, rectangle split parts = 2,rectangle split empty part height=1cm,draw, fill=yellow!25,inner ysep=7pt,inner xsep=15pt,#1,#4](#3) {#2 \nodepart{second}};
+	\UMLComponentToken{#3}{yellow!25}{}
+}
+
+% }}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%UML Extern Component
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\def\UMLExternComponent#1#2#3{
+	\node [rectangle split, rectangle split parts = 2,rectangle split empty part height=1cm,draw, fill=black!10,inner ysep=7pt,inner xsep=15pt] at(#1,#2) (#3) {$<<$#3$>>$ \nodepart{second}};
+	\UMLComponentToken{#3}{black!10}{}
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%UML Note
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%USAGE:
+%	\UMLNote{x}{y}{text}{to (--)}{color (rectangle north east)}
+\def\UMLNote#1#2#3#4#5{
+	\node [rectangle,fill=green!25,draw,inner ysep=15pt,inner xsep=6pt,text width=3cm] at (#1,#2) (b) {\small{#3}};
+	\draw [fill=#5,#5]($(b.north east) + (.1,.1)$) -- ($(b.north east) - (0,.5)$) -- ($(b.north east) - (.5,0)$) -- cycle;
+	\draw ($(b.north east) - (.01,.5)$) -- ($(b.north east) - (.5,.01)$) -- ($(b.north east)-(.5,.5)$) -- cycle;
+	\draw [dashed](b) -- (#4);
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% UML Component Port
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% 1. position
+% 2. options (draw)
+\def\UMLComponentPort#1#2{
+	\draw[fill=yellow!25,#2] ($(#1)-(.2,.2)$) rectangle ($(#1)+(.2,.2)$);
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% UML Component Connector with Ports on both ends
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\def\UMLComponentPortConnector#1#2#3#4#5#6#7#8{
+	\draw[#3,-{>[sep=3.5]>}] (#1) #4 (#2);
+	\UMLNote{#5}{#6}{#7}{#2}{#8}
+	\draw[fill=yellow!25] ($(#1)-(.2,.2)$) rectangle ($(#1)+(.2,.2)$);
+	\draw[fill=yellow!25] ($(#2)-(.2,.2)$) rectangle ($(#2)+(.2,.2)$);
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% UML Component Realizor with Ports on both ends
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\def\UMLComponentPortRealizor#1#2#3#4#5#6#7#8{
+	\draw[#3,-{Stealth[sep=3.5,inset=0pt,length=5pt,width=5pt]>},blue] (#1) #4 (#2);
+	\UMLNote{#5}{#6}{#7}{#2}{#8}
+	\draw[fill=yellow!25] ($(#1)-(.2,.2)$) rectangle ($(#1)+(.2,.2)$);
+	\draw[fill=yellow!25] ($(#2)-(.2,.2)$) rectangle ($(#2)+(.2,.2)$);
+}
+
+% UML Class (various) {{{
+%
+% 1. Normal                         -> \UMLClass { X } { Y } { Text/Name } { Options (node) }
+% 2. Normal mit alternativem Namen  -> \UMLClassAlterName { X } { Y } { Text } { Name } { Options (node) }
+% 3. Relativ                        -> \UMLClassRelativeTo { Relative to } { Text/Name } { Options (node) }
+% 4. Relativ mit alternativem Namen -> \UMLClassRelativeToAlterName { Relative to } { Text } { Name } { Options (node) }
+
+  % 1. Normal {{{
+  \def\UMLClass#1#2#3#4{
+    \node [
+      fill = yellow!25,
+      rectangle split,
+      rectangle split parts = 3,
+      rectangle split ignore empty parts = true,
+      rectangle split part align = {center, left, left},
+      inner xsep = 15pt,
+      inner ysep = 7pt,
+      draw,
+      #4
+    ] at(#1,#2) (#3) {#3};
+  }
+  % }}}
+
+  % 2. Normal mit alternativem Namen {{{
+    \def\UMLClassAlterName#1#2#3#4#5{
+      \node [
+        fill = yellow!25,
+        rectangle split,
+        rectangle split parts = 3,
+        rectangle split ignore empty parts = true,
+        rectangle split part align = {center, left, left},
+        inner xsep = 15pt,
+        inner ysep = 7pt,
+        draw,
+        #5
+      ] at (#1, #2) (#4) {#3};
+    }
+  % }}}
+
+  % 3. Relativ {{{
+    \def\UMLClassRelativeTo#1#2#3{
+      \node [
+        fill = yellow!25,
+        rectangle split,
+        rectangle split parts = 3,
+        rectangle split ignore empty parts = true,
+        rectangle split part align = {center, left, left},
+        inner xsep = 15pt,
+        inner ysep = 7pt,
+        draw,
+        #1,
+        #3
+      ] (#2) {#2};
+    }
+  % }}}
+
+  % 4. Relativ {{{
+    \def\UMLClassRelativeToAlterName#1#2#3#4{
+      \node [
+        fill = yellow!25,
+        rectangle split,
+        rectangle split parts = 3,
+        rectangle split ignore empty parts = true,
+        rectangle split part align = {center, left, left},
+        inner xsep = 15pt,
+        inner ysep = 7pt,
+        draw,
+        #1,
+        #4
+      ] (#3) {#2};
+    }
+  % }}}
+
+% }}}
+
+% UML Actor (various) {{{
+%
+% 1. Normal
+%    -> \UMLActor { X } { Y } { Text/Name }
+% 2. Normal mit alternativem Namen
+%    -> \UMLActorAlterName { X } { Y } { Text } { Name }
+% 3. Relativ
+%    -> \UMLActorRelativeTo { Relative to } { Text/Name }
+% 4. Relativ mit alternativem Namen
+%    -> \UMLActorRelativeToAlterName { Relative to } { Text } { Name }
+
+  % DrawActor {{{
+  \def\DrawActor#1{
+
+    % Body {{{
+    \draw[scale=.5] ($(#1)+(0,.5)$) -- ($(#1)-(0,.5)$);
+    % }}}
+
+    % Left leg {{{
+    \draw[scale=.5] ($(#1)-(0,.5)$) -- ($(#1)+(.5,-1)$);
+    % }}}
+
+    % Right leg {{{
+    \draw[scale=.5] ($(#1)-(0,.5)$) -- ($(#1)+(-.5,-1)$);
+    % }}}
+
+    % Arms {{{
+    \draw[scale=.5] ($(#1)+(.5,.25)$) -- ($(#1)+(-.5,.25)$);
+    % }}}
+
+    % Head {{{
+    \draw[scale=.5] ($(#1)+(0,.75)$) circle (.25);
+    % }}}
+
+  }
+  % }}}
+
+  % 1. Normal {{{
+  \def\UMLActor#1#2#3{
+
+    % Node for referencing actor {{{
+    \node[
+      label=below:#3,
+      inner ysep=.55cm,
+      inner xsep=.3cm
+    ] at (#1,#2) (#3) {};
+    % }}}
+
+    \DrawActor{#3}
+
+  }
+  % }}}
+
+  % 2. Normal mit alternativem Namen {{{
+  \def\UMLActorAlterName#1#2#3#4{
+
+    % Node for referencing actor {{{
+    \node[
+      label=below:#3,
+      inner ysep=.55cm,
+      inner xsep=.3cm
+    ] at (#1,#2) (#4) {};
+    % }}}
+
+    \DrawActor{#4}
+
+  }
+  % }}}
+
+  % 3. Relativ {{{
+  \def\UMLActorRelativeTo#1#2{
+
+    % Node for referencing actor {{{
+    \node[
+      label=below:#2,
+      inner ysep=.55cm,
+      inner xsep=.3cm,
+      #1
+    ] (#2) {};
+    % }}}
+
+    \DrawActor{#2}
+
+  }
+  % }}}
+
+  % 4. Relativ {{{
+  \def\UMLActorRelativeToAlterName#1#2#3{
+
+    % Node for referencing actor {{{
+    \node[
+      label=below:#2,
+      inner ysep=.55cm,
+      inner xsep=.3cm,
+      #1
+    ] (#3) {};
+    % }}}
+
+    \DrawActor{#3}
+
+  }
+  % }}}
+
+% }}}
+
+%
+% UML Activity State (various)
+%
+% 1. Normal                         -> \UMLActivityState{ X }{ Y }{ Text/Name }{ Options (node) }
+% 2. Normal mit alternativem Namen  -> \UMLActivityStateAlterName{ X }{ Y }{ Text }{ Name }{ Options (node) }
+% 3. Relativ                        -> \UMLActivityStateRelativeTo{ Relative to }{ Text/Name }{ Options (node) }
+% 4. Relativ mit alternativem Namen -> \UMLActivityStateRelativeToAlterName{ Relative to }{ Text }{ Name }{ Options (node) }
+%
+%
+
+% 1. Normal
+%
+% #1: X
+% #2: Y
+% #3: Text/Name
+% #4: Options (node)
+
+\def\UMLActivityState#1#2#3#4{
+	\node [rectangle,rounded corners,draw,fill=black!10,inner ysep=9pt,inner xsep=22pt,#4] at(#1,#2) (#3) {#3};
+	\UMLActivityStateToken{#3}
+}
+
+% 2. Alternativer Name
+%
+% #1: X
+% #2: Y
+% #3: Text
+% #4: Name
+% #5: Options (node)
+
+\def\UMLActivityStateAlterName#1#2#3#4#5{
+	\node [rectangle,rounded corners,draw,fill=black!10,inner ysep=9pt,inner xsep=22pt,#5] at(#1,#2) (#4) {#3};
+	\UMLActivityStateToken{#4}
+}
+
+
+% 3. Relativ
+%
+% #1: Relative to (z.B. below=1 of ...)
+% #2: Text/Name
+% #3: Options (node)
+
+\def\UMLActivityStateRelativeTo#1#2#3{
+	\node [rectangle,rounded corners,draw,fill=black!10,inner ysep=9pt,inner xsep=22pt,#1,#3] (#2) {#2};
+	\UMLActivityStateToken{#2}
+}
+
+
+% 4. Relativ mit alternativem Namen
+%
+% #1: Relative to (z.B. below=1 of ...)
+% #2: Text
+% #3: Name
+% #4: Options
+
+\def\UMLActivityStateRelativeToAlterName#1#2#3#4{
+	\node [rectangle,rounded corners,draw,fill=black!10,inner ysep=9pt,inner xsep=22pt,#1,#4] (#3) {#2};
+	\UMLActivityStateToken{#3}
+}
+
+
+% Token
+
+\def\UMLActivityStateToken#1{
+	\draw[fill=yellow!25,rounded corners] ($(#1.west)+(.3,.25)$) rectangle ($(#1.west)+(.7,-.15)$);
+}
+
+
+%
+% UML Activity Object (various)
+%
+% 1. Normal                         -> \UMLActivityObject{ X }{ Y }{ Text/Name }{ Options (node) }
+% 2. Normal mit alternativem Namen  -> \UMLActivityObjectAlterName{ X }{ Y }{ Text }{ Name }{ Options (node) }
+% 3. Relativ                        -> \UMLActivityObjectRelativeTo{ Relative to }{ Text/Name }{ Options (node) }
+% 4. Relativ mit alternativem Namen -> \UMLActivityObjectRelativeToAlterName{ Relative to }{ Text }{ Name }{ Options (node) }
+%
+%
+
+% 1. Normal
+%
+% #1: X
+% #2: Y
+% #3: Text/Name
+% #4: Options (node)
+
+\def\UMLActivityObject#1#2#3#4{
+	\node [rectangle,draw,fill=green!15,inner ysep=9pt,inner xsep=25pt,#4] at(#1,#2) (#3) {:#3};
+	\UMLActivityObjectToken{#3}
+}
+
+
+% 2. Alternativer Name
+%
+% #1: X
+% #2: Y
+% #3: Text
+% #4: Name
+% #5: Options (node)
+
+\def\UMLActivityObjectAlterName#1#2#3#4#5{
+	\node [rectangle,draw,fill=green!15,inner ysep=9pt,inner xsep=25pt,#5] at(#1,#2) (#4) {:#3};
+	\UMLActivityObjectToken{#4}
+}
+
+
+% 3. Relativ
+%
+% #1: Relative to (z.B. below=1 of ...)
+% #2: Text/Name
+% #3: Options (node)
+
+\def\UMLActivityObjectRelativeTo#1#2#3{
+	\node [rectangle,draw,fill=green!15,inner ysep=9pt,inner xsep=25pt,#3,#1] (#2) {:#2};
+	\UMLActivityObjectToken{#2}
+}
+
+
+% 4. Relativ mit alternativem Namen
+%
+% #1: Relative to (z.B. below=1 of ...)
+% #2: Text
+% #3: Name
+% #4: Options
+
+\def\UMLActivityObjectRelativeToAlterName#1#2#3#4{
+	\node [rectangle,draw,fill=green!15,inner ysep=9pt,inner xsep=25pt,#4,#1] (#3) {:#2};
+	\UMLActivityObjectToken{#3}
+}
+
+
+% Token
+
+\def\UMLActivityObjectToken#1{
+	\draw[fill=yellow!25] ($(#1.west)+(.3,.25)$) rectangle ($(#1.west)+(.7,.11)$);
+	\draw ($(#1.west)+(.35,.18)$) -- ($(#1.west)+(.65,.18)$);
+	\draw[fill=yellow!25] ($(#1.west)+(.3,.11)$) rectangle ($(#1.west)+(.7,-.02)$);
+	\draw[fill=yellow!25] ($(#1.west)+(.3,-.02)$) rectangle ($(#1.west)+(.7,-.15)$);
+}
+
+
+%
+% UML Activity Data Storage (various)
+%
+% 1. Normal                         -> \UMLActivityDataStorage{ X }{ Y }{ Text/Name }{ Options (node) }
+% 2. Normal mit alternativem Namen  -> \UMLActivityDataStorageAlterName{ X }{ Y }{ Text }{ Name }{ Options (node) }
+% 3. Relativ                        -> \UMLActivityDataStorageRelativeTo{ Relative to }{ Text/Name }{ Options (node) }
+% 4. Relativ mit alternativem Namen -> \UMLActivityDataStorageRelativeToAlterName{ Relative to }{ Text }{ Name }{ Options (node) }
+%
+%
+
+% 1. Normal
+%
+% #1: X
+% #2: Y
+% #3: Text/Name
+% #4: Options (node)
+
+\def\UMLActivityDataStorage#1#2#3#4{
+	\node [rectangle,draw,fill=green!15,inner ysep=9pt,inner xsep=25pt,#4] at(#1,#2) (#3) {#3};
+	\UMLActivityDataStorageToken{#3}
+}
+
+
+% 2. Alternativer Name
+%
+% #1: X
+% #2: Y
+% #3: Text
+% #4: Name
+% #5: Options (node)
+
+\def\UMLActivityDataStorageAlterName#1#2#3#4#5{
+	\node [rectangle,draw,fill=green!15,inner ysep=9pt,inner xsep=25pt,#5] at(#1,#2) (#4) {#3};
+	\UMLActivityDataStorageToken{#4}
+}
+
+
+% 3. Relativ
+%
+% #1: Relative to (z.B. below=1 of ...)
+% #2: Text/Name
+% #3: Options (node)
+
+\def\UMLActivityDataStorageRelativeTo#1#2#3{
+	\node [rectangle,draw,fill=green!15,inner ysep=9pt,inner xsep=25pt,#3,#1] (#2) {#2};
+	\UMLActivityDataStorageToken{#2}
+}
+
+
+% 4. Relativ mit alternativem Namen
+%
+% #1: Relative to (z.B. below=1 of ...)
+% #2: Text
+% #3: Name
+% #4: Options
+
+\def\UMLActivityDataStorageRelativeToAlterName#1#2#3#4{
+	\node [rectangle,draw,fill=green!15,inner ysep=9pt,inner xsep=25pt,#4,#1] (#3) {#2};
+	\UMLActivityDataStorageToken{#3}
+}
+
+
+% Token
+
+\def\UMLActivityDataStorageToken#1{
+	\node[rectangle,draw,scale=.5,fill=yellow!25] at($(#1.west)+(.5,-.05)$) (ds) {DS};
+	\draw[-{>[scale width=.5]}] ($(ds.north west)+(0,.15)$) -| (ds.north);
+	\draw[-{>[scale width=.5]}] (ds.east) -- ($(ds.east)+(.15,0)$);
+}
+
+
+%
+% UML Activity Central Buffer (various)
+%
+% 1. Normal                         -> \UMLActivityCentralBuffer{ X }{ Y }{ Text/Name }{ Options (node) }
+% 2. Normal mit alternativem Namen  -> \UMLActivityCentralBufferAlterName{ X }{ Y }{ Text }{ Name }{ Options (node) }
+% 3. Relativ                        -> \UMLActivityCentralBufferRelativeTo{ Relative to }{ Text/Name }{ Options (node) }
+% 4. Relativ mit alternativem Namen -> \UMLActivityCentralBufferRelativeToAlterName{ Relative to }{ Text }{ Name }{ Options (node) }
+%
+%
+
+% 1. Normal
+%
+% #1: X
+% #2: Y
+% #3: Text/Name
+% #4: Options (node)
+
+\def\UMLActivityCentralBuffer#1#2#3#4{
+	\node [rectangle,draw,fill=green!15,inner ysep=9pt,inner xsep=25pt,#4] at(#1,#2) (#3) {#3};
+	\UMLActivityCentralBufferToken{#3}
+}
+
+
+% 2. Alternativer Name
+%
+% #1: X
+% #2: Y
+% #3: Text
+% #4: Name
+% #5: Options (node)
+
+\def\UMLActivityCentralBufferAlterName#1#2#3#4#5{
+	\node [rectangle,draw,fill=green!15,inner ysep=9pt,inner xsep=25pt,#5] at(#1,#2) (#4) {#3};
+	\UMLActivityCentralBufferToken{#4}
+}
+
+
+% 3. Relativ
+%
+% #1: Relative to (z.B. below=1 of ...)
+% #2: Text/Name
+% #3: Options (node)
+
+\def\UMLActivityCentralBufferRelativeTo#1#2#3{
+	\node [rectangle,draw,fill=green!15,inner ysep=9pt,inner xsep=25pt,#3,#1] (#2) {#2};
+	\UMLActivityCentralBufferToken{#2}
+}
+
+
+% 4. Relativ mit alternativem Namen
+%
+% #1: Relative to (z.B. below=1 of ...)
+% #2: Text
+% #3: Name
+% #4: Options
+
+\def\UMLActivityCentralBufferRelativeToAlterName#1#2#3#4{
+	\node [rectangle,draw,fill=green!15,inner ysep=9pt,inner xsep=25pt,#4,#1] (#3) {#2};
+	\UMLActivityCentralBufferToken{#3}
+}
+
+
+% Token
+
+\def\UMLActivityCentralBufferToken#1{
+	\node[rectangle,draw,scale=.5,fill=yellow!25] at($(#1.west)+(.5,-.05)$) (cb) {CB};
+	\draw[-{>[scale width=.5]}] ($(cb.north west)+(0,.15)$) -| (cb.north);
+	\draw[-{>[scale width=.5]}] (cb.east) -- ($(cb.east)+(.15,0)$);
+}
+
+
+% 1. N1
+% 2. N2
+% 3. Path
+\def\UMLActivityControlFlow#1#2#3{
+	\draw[blue,->] (#1) #3 (#2);
+}
+
+% 1. N1
+% 2. N2
+% 3. Path
+% 4. Text
+% 5. Text Pos
+% 6. Text Options
+\def\UMLActivityControlFlowWithGuard#1#2#3#4#5#6{
+	\draw[blue,->] (#1) #3 (#2);
+	\node[#6] at ($(#1)!#5!(#2)$) {\tiny{[#4]}};
+}
+
+% 1. N1
+% 2. N2
+% 3. Path
+% 4. Text
+% 5. Text Pos
+% 6. Text Options
+\def\UMLActivityControlFlowWithText#1#2#3#4#5#6{
+	\draw[blue,->] (#1) #3 (#2);
+	\node[#6] at ($(#1)!#5!(#2)$) {\tiny{#4}};
+}
+
+
+
+% UML Activity Data Flow (various)
+
+\def\UMLActivityDataFlowPort#1#2#3{
+	\draw[fill=#3] ($(#1)-(.15,.15)$) rectangle ($(#1)+(.15,.15)$);
+	\draw[->,rotate=#2] ($(#1)-(.1,0)$) -- ($(#1)+(.1,0)$);
+}
+
+\def\UMLActivityDataFlow#1#2#3#4#5{
+	\draw[brown!50!black,-{>[sep=3pt]>}] (#1) #3 (#2);
+	\UMLActivityDataFlowPort{#1}{#4}{blue!25}
+	\UMLActivityDataFlowPort{#2}{#5}{orange!25}
+}
+
+% 1. N1
+% 2. N2
+% 3. Path
+% 4. Text
+% 5. Text Options N1
+% 6. Text Options N2
+% 7. Arrow Direction (Deg) N1
+% 8. Arrow Direction (Deg) N2
+
+\def\UMLActivityDataFlowWithText#1#2#3#4#5#6#7#8{
+	\draw[brown!50!black,-{>[sep=3pt]>}] (#1) #3 (#2);
+	\node[#5] at (#1) {\tiny{#4}};
+	\node[#6] at (#2) {\tiny{#4}};
+	\UMLActivityDataFlowPort{#1}{#7}{blue!25}
+	\UMLActivityDataFlowPort{#2}{#8}{orange!25}
+}
+
+\def\UMLActivityDataFlowNoPorts#1#2#3{
+	\draw[brown!50!black,->] (#1) #3 (#2);
+}
+
+\def\UMLActivityDataFlowIn#1#2#3#4{
+	\draw[brown!50!black,-{>[sep=3pt]>}] (#1) #3 (#2);
+	\UMLActivityDataFlowPort{#2}{#4}{orange!25}
+}
+
+% 1. N1
+% 2. N2
+% 3. Path
+% 4. Text
+% 5. Text Pos
+% 6. Text Options
+% 7. Arrow Direction (Deg)
+
+\def\UMLActivityDataFlowInWithText#1#2#3#4#5#6#7{
+	\draw[brown!50!black,-{>[sep=3pt]>}] (#1) #3 (#2);
+	\node[#6] at ($(#1)!#5!(#2)$) {\tiny{#4}};
+	\UMLActivityDataFlowPort{#2}{#7}{orange!25}
+}
+
+\def\UMLActivityDataFlowOut#1#2#3#4{
+	\draw[brown!50!black,->] (#1) #3 (#2);
+	\UMLActivityDataFlowPort{#1}{#4}{blue!25}
+}
+
+\def\UMLActivityDataFlowOutWithText#1#2#3#4#5#6#7{
+	\draw[brown!50!black,->] (#1) #3 (#2);
+	\node[#6] at ($(#1)!#5!(#2)$) {\tiny{#4}};
+	\UMLActivityDataFlowPort{#1}{#7}{blue!25}
+}
+
+
+% Nodes
+
+\def\UMLActivityInitialNode#1#2{
+	\node[circle,draw,inner sep=5pt,fill=black] at (#1,#2) (initial) {};
+}
+
+\def\UMLActivityInitialNodeRelativeTo#1{
+	\node[circle,draw,inner sep=5pt,fill=black,#1] (initial) {};
+}
+
+\def\UMLActivityFinalNode#1#2#3{
+	\draw[fill=black] (#1,#2) circle (.2cm);
+	\node[circle,draw,inner sep=5pt] at (#1,#2) (#3) {};
+}
+
+\def\UMLActivityFinalNodeRelativeTo#1#2{
+	\node[circle,draw,inner sep=5pt,#1] (#2) {};
+	\node[circle,draw,inner sep=4pt,fill=black] at (#2) {};
+}
+
+\def\UMLActivityExitNode#1#2#3{
+	\node[circle,draw,fill=white,inner sep=5pt] at (#1,#2) (#3) {};
+	\draw (#3.north west) -- (#3.south east);
+	\draw (#3.north east) -- (#3.south west);
+}
+
+\def\UMLActivityExitNodeRelativeTo#1#2{
+	\node[circle,draw,fill=white,inner sep=5pt,#1] (#2) {};
+	\draw (#2.north west) -- (#2.south east);
+	\draw (#2.north east) -- (#2.south west);
+}
+
+\def\UMLActivityDescisionNode#1#2#3{
+	\node[diamond,draw,fill=black!10,aspect=.75] at (#1,#2) (#3) {};
+}
+
+\def\UMLActivityDescisionNodeRelativeTo#1#2{
+	\node[diamond,draw,fill=black!10,aspect=.75,#1] (#2) {};
+}
+
+% 1. Relative to
+% 2. Name
+% 3. Text
+% 4. Text Options
+\def\UMLActivityWaitTimeActionRelativeTo#1#2#3#4#5{
+	\node[#1,minimum size=.5cm] (#2) {};
+	\node[#5] at (#4) {\tiny{#3}};
+	\draw ($(#2) - (.25,.25)$) -- ($(#2) + (.25,.25)$) -- ($(#2) + (-.25,.25)$) -- ($(#2) + (.25,-.25)$) -- cycle;
+	%\node[isosceles triangle,draw,#1,rotate=90,below left] (#2_bottom) {};
+}
+
+% 1. X
+% 2. Y
+% 3. Name
+% 4. Size
+\def\UMLActivityConcurrentNodeH#1#2#3#4{
+	\node[rectangle,draw,fill=black,inner ysep=1pt,inner xsep=#4/2] at (#1,#2) (#3) {};
+}
+
+% 1. Relative to
+% 2. Name
+% 3. Size
+\def\UMLActivityConcurrentNodeHRelativeTo#1#2#3{
+	\node[rectangle,draw,fill=black,inner ysep=1pt,inner xsep=#3/2,#1] (#2) {};
+}
+
+% 1. X
+% 2. Y
+% 3. Name
+% 4. Size
+\def\UMLActivityConcurrentNodeV#1#2#3#4{
+	\node[rectangle,draw,fill=black,inner xsep=1pt,inner ysep=#4/2] at (#1,#2) (#3) {};
+}
+
+% 1. Relative to
+% 2. Name
+% 3. Size
+% 4. Options
+\def\UMLActivityConcurrentNodeVRelativeTo#1#2#3#4{
+	\node[rectangle,draw,fill=black,inner xsep=1pt,inner ysep=#3/2,#1,#4] (#2) {};
+}
+
+\def\UMLActivitySwimlane#1#2#3#4{
+	\node[black!25,rectangle split, rectangle split parts = 2,rectangle split empty part height=#3,draw,fill=yellow!10,inner ysep=7pt,inner xsep=15pt,minimum size=#2,#4] (#1) {#1 \nodepart{second}};
+	\UMLComponentToken{#1}{yellow!10}{black!25}
+}
+
+\def\UMLActivityExternSwimlane#1#2#3#4{
+	\node [black!25,rectangle split, rectangle split parts = 2,draw,fill=black!5,inner ysep=7pt,inner xsep=15pt,rectangle split empty part height=#3,minimum size=#2,#4] (#1) {#1 \nodepart{second}};
+	\UMLComponentToken{#1}{black!5}{black!25}
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% State Diagram
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% UML State Diagramm Object State (various)
+%
+% 1. Normal                         -> \UMLActivityState{ X }{ Y }{ Text/Name }{ Options (node) }
+% 2. Normal mit alternativem Namen  -> \UMLActivityStateAlterName{ X }{ Y }{ Text }{ Name }{ Options (node) }
+% 3. Relativ                        -> \UMLActivityStateRelativeTo{ Relative to }{ Text/Name }{ Options (node) }
+% 4. Relativ mit alternativem Namen -> \UMLActivityStateRelativeToAlterName{ Relative to }{ Text }{ Name }{ Options (node) }
+%
+%
+
+% 1. Normal
+%
+% #1: X
+% #2: Y
+% #3: Text/Name
+% #4: Options (node)
+
+\def\UMLStateObjectState#1#2#3#4{
+	\node [rectangle,rounded corners,draw,fill=black!10,inner ysep=9pt,inner xsep=10pt,#4] at(#1,#2) (#3) {#3};
+}
+
+% 2. Alternativer Name
+%
+% #1: X
+% #2: Y
+% #3: Text
+% #4: Name
+% #5: Options (node)
+
+\def\UMLStateObjectStateAlterName#1#2#3#4#5{
+	\node [rectangle,rounded corners,draw,fill=black!10,inner ysep=9pt,inner xsep=10pt,#5] at(#1,#2) (#4) {#3};
+}
+
+
+% 3. Relativ
+%
+% #1: Relative to (z.B. below=1 of ...)
+% #2: Text/Name
+% #3: Options (node)
+
+\def\UMLStateObjectStateRelativeTo#1#2#3{
+	\node [rectangle,rounded corners,draw,fill=black!10,inner ysep=9pt,inner xsep=10pt,#1,#3] (#2) {#2};
+}
+
+
+% 4. Relativ mit alternativem Namen
+%
+% #1: Relative to (z.B. below=1 of ...)
+% #2: Text
+% #3: Name
+% #4: Options
+
+\def\UMLStateObjectStateRelativeToAlterName#1#2#3#4{
+	\node [rectangle,rounded corners,draw,fill=black!10,inner ysep=9pt,inner xsep=10pt,#1,#4] (#3) {#2};
+}
+
+% 1. N1
+% 2. N2
+% 3. Path
+\def\UMLStateControlFlow#1#2#3{
+	\draw[->] (#1) #3 (#2);
+}
+
+% 1. N1
+% 2. N2
+% 3. Path
+% 4. Guard Text
+% 5. Guard Pos
+% 6. Guard Options (Node)
+\def\UMLStateControlFlowWithGuard#1#2#3#4#5#6{
+	\draw[->] (#1) #3 (#2);
+	\node[#6] at ($(#1)!#5!(#2)$) {\tiny{[#4]}};
+}
+
+% 1. N1
+% 2. N2
+% 3. Path
+% 4. Text Text
+% 5. Text Pos
+% 6. Text Options (Node)
+\def\UMLStateControlFlowWithText#1#2#3#4#5#6{
+	\draw[->] (#1) #3 (#2);
+	\node[#6] at ($(#1)!#5!(#2)$) {\tiny{#4}};
+}
+
+% 1. N1
+% 2. N2
+% 3. Path
+% 4. Guard Text
+% 5. Guard Pos
+% 6. Guard Options (Node)
+% 7. Text Text
+% 8. Text Pos
+% 9. Text Options (Node)
+\def\UMLStateControlFlowWithGuardAndText#1#2#3#4#5#6#7#8#9{
+	\draw[->] (#1) #3 (#2);
+	\node[#6] at ($(#1)!#5!(#2)$) {\tiny{[#4]}};
+	\node[#9] at ($(#1)!#8!(#2)$) {\tiny{#7}};
+}
+
