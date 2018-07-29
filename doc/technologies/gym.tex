@@ -1,0 +1,41 @@
+\subsection{OpenAI Gym}
+\label{s_openai_gym}
+
+"OpenAI Gym is a toolkit for reinforcement learning
+research. It includes a growing collection of benchmark
+problems that expose a common interface, and a website
+where people can share their results and compare the
+performance of algorithms."\cite{gym}
+
+OpenAI Gym is an easy to use and easy to integrate toolkit
+with a veriety of environments for reinforcement learning
+(RL) (cmp. \ref{ss_nn_nndrl}) which we used for training
+our agent.
+
+\begin{mdframed}[style=codebox]
+\begin{lstlisting}[language=Python]
+# a small example program using OpenAI Gym
+
+import gym
+import random
+
+# build gym environment. A full list of available environ-
+# ments can be found at: https://gym.openai.com/envs/
+environment = gym.make('LunarLander-v2')
+
+# the range of actions an agent can perform
+action_space = environment.action_space.n
+
+# mandatory first reset
+environment.reset()
+
+# generate random action (instead of predicted action from
+# the agent)
+action = random.randrange(0,action_space)
+
+# observations provided by the gym environment after
+# doing the random action in the environment
+observation, reward, done, info = environment.step(action)
+
+\end{lstlisting}
+\end{mdframed}

@@ -1,18 +1,112 @@
 \section{Application}
 
-intro here
+% Introduction {{{
+Our goal was to make use of a lot of computing power in
+order to train our agent to master an OpenAI Gym
+Environment (cmp. \ref{s_openai_gym}). In this chapter we
+will document how we tried to achieve this goal with our
+distributed application.
+
+% }}}
+
+% The agent {{{
+\subsection{The agent}
+
+We programmed our agent as a neural network with the Keras
+library, which has an API for high level, high abstraction
+neural networks.
+
+Keras uses Tensorflow as its backend for computations and
+basically only provides a nicer abstraction of Tensorflow.
+
+% example {{{
+\begin{mdframed}[style=codebox]
+\begin{lstlisting}[language=Python]
+# a small example program using Keras
+#
+# API documentation at: https://keras.io/
+
+# Sequential is the keras object representing a neural net-
+# work
+from keras.models import Sequential
+# a neural net is comprised of layers connected with each
+# other. The Dense object represents a layer
+from keras.layers import Dense
+
+# the neural net. This specific neural net has four layers
+# (the input (size of 12), two hidden (both 64 artificial
+# neurons) and the output layer (size of 4)). The input
+# layer does not have to be specified since the input_dim
+# parameter of the first layer automatically generates the
+# input layer.
+model = Sequential([
+  Dense(64, activation='relu', input_dim=12 ),
+  Dense(64, activation='relu'               ),
+  Dense(4,  activation='softmax'            ),
+])
+
+# define how the model should learn and some other meta
+# information for the training process (learning algorithm,
+# optimizer, etc)
+model.compile(
+        optimizer = 'adam',
+        loss      = 'categorical_crossentropy',
+        metrics   = ['accuracy']
+)
+
+# generate a dummy data set with corresponding labels with
+# 1000 entries for training
+import numpy as np
+
+data   = np.random.random((1000,12))
+# generating the labels (either a 0 or a 1)
+labels = np.random.randint(2, size=(1000, 1))
+
+# training the model, iterating 10 times
+model.train(data, labels, epochs=10)
+
+# using the neural net to predict the label of a random
+# data point
+test   = np.random.random((1,12))
+
+model.predict(test)
+\end{lstlisting}
+\end{mdframed}
+% }}}
+% }}}
+
+\newpage
 
 \subsection{Architecture}
 
-intro here
+This chapter will describe in detail how our application
+is build, how it works and what we use to achieve
+concurrency.
 
+On a higher level our application is devided into two
+distinct parts, the Executioner ($E$) and the Worker ($W$).
+
+% Network {{{
+\subsubsection{Network}
+
+Instances of both, $E_i$ and $W_i$ communicate over a
+message broker, in this case RabbitMQ (cmp.
+\ref{s_message_broker}, \ref{s_rabbitmq}).
+
+\input{diagrams/app_network}
+% }}}
+
+% Executioner {{{
 \subsubsection{Executioner}
 
+% }}}
+
+% Worker {{{
 \subsubsection{Worker}
 
 here comes the data sanitation part
 
-\subsubsection{Network}
+% }}}
 
 \subsubsection{Queues}
 

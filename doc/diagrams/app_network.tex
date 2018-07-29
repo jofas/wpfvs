@@ -1,0 +1,70 @@
+\begin{figure}[H]
+\begin{center}
+\begin{tikzpicture}
+
+  \node[inner sep=15pt]
+    at (0,0) (rmq) {};
+
+  \node [label=$W_2$, inner ysep=50pt, above=4cm of rmq]
+    (w_two) {};
+  \draw[-{Stealth[color=white,length=10mm]}]
+    (w_two.center) -- (rmq);
+  \PCIcon{w_two}{scale=.25}
+
+  \node [label=$W_1$, inner ysep=50pt, left =2cm of w_two]
+    (w_one)   {};
+  \draw[-{Stealth[color=white,length=10mm]}]
+    (w_one.center) -- (rmq);
+  \PCIcon{w_one}{scale=.25}
+
+  \node [label=$W_0$, inner ysep=50pt, left =2cm of w_one]
+    (w_zero)   {};
+  \draw[-{Stealth[color=white,length=10mm]}]
+    (w_zero.center) -- (rmq);
+  \PCIcon{w_zero}{scale=.25}
+
+  \node [right=2cm of w_two] (w_dots) {\dots};
+
+  \node [label=$W_n$, inner ysep=50pt, right=2cm of w_dots]
+    (w_n) {};
+  \draw[-{Stealth[color=white,length=10mm]}]
+    (w_n.center) -- (rmq);
+  \PCIcon{w_n}{scale=.25}
+
+
+  \node [label={below:$E_2$}, inner ysep=40pt,
+    below=4cm of rmq]
+    (e_two) {}
+    edge[-{Stealth[color=white,length=10mm]}] (rmq);
+  \PCIcon{e_two}{scale=.25}
+
+  \node [label={below:$E_1$}, inner ysep=40pt,
+    left =2cm of e_two]
+    (e_one)   {}
+    edge[-{Stealth[color=white,length=10mm]}] (rmq);
+  \PCIcon{e_one}{scale=.25}
+
+  \node [label={below:$E_0$}, inner ysep=40pt,
+    left =2cm of e_one]
+    (e_zero)   {}
+    edge[-{Stealth[color=white,length=10mm]}] (rmq);
+  \PCIcon{e_zero}{scale=.25}
+
+  \node [right=2cm of e_two] (e_dots) {\dots};
+
+  \node [label={below:$E_m$}, inner ysep=40pt,
+    right=2cm of e_dots]
+    (e_n) {}
+    edge[-{Stealth[color=white,length=12mm]}] (rmq);
+  \PCIcon{e_n}{scale=.25}
+
+
+  \node[label={below:RabbitMQ},inner ysep=15pt]
+    at (0,0) {};
+  \RabbitMQ{rmq}{scale=.25}
+
+\end{tikzpicture}
+\end{center}
+\caption{Architecture of our Application on the network
+  level}
+\end{figure}
