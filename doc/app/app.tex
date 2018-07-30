@@ -31,9 +31,300 @@ left.
   \caption{Screenshot of "CardPole-v1"}
 \end{figure}
 
+We developed our program on a HP EliteBook 8730w with a
+Intel Core 2 Duo processor (2.40 GHz) running OpenSuSE
+Leap 43. We needed an older Tensorflow version because the
+current version does not support this CPU anymore. Also
+Tensorflow was not able to utilize any GPU (Graphical
+Processing Unit), which means our developement environment
+does not have much computing power to offer.
 
-\subsection{Where to go}
+The problem we faced with training an agent for
+"CardPole-v1" was that, running the program in our
+developement environment, we were able to build an agent
+that succeded this environment in at most three training
+loops (which overall took aproximately 5 minutes). This was
+achieved with running one Executor, the RabbitMQ and
+between one and three Worker instances on the same device
+which does not offer great computing abilitites (especially
+compared to the operational environment (the cluster in
+Room 1.242 containing 10 Apple Mac Pros)).
 
-(dynamic data generation, loadbalancing, further optimizations
-like thread pool exec in worker (not spawning so often),
-destroying the bottleneck in executioner (data parsing))
+Since it would not made much sense running benchmarks on
+the operational environment training an agent to master
+"CardPole-v1" we needed a different Gym environment.
+
+We decided we would take "LunarLander-v2", a Atari Arcade
+Game where the agent has to land an ufo safely inside a
+flagged area on the ground.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth/2]
+  {diagrams/lunarlander.jpg}
+  \caption{Screenshot of "LunarLander-v2"}
+\end{figure}
+
+"LunarLander-v2" is a far more complex environment to
+master since its action space is higher, it offers far more
+different observations and a more complex scoring system.
+
+When we tried to train an agent that would master
+"LunarLander-v2" on our development environment we were
+never able to build an agent that would succeed in this
+(every time we tried running our program we canceled after
+four hours of runtime).
+
+We did four test runs on our operational environment (in
+room 1.242), each with a different approach either in the
+amount of Executors (one or two) or the sanitation done
+to the training data (less strict which means more training
+data or more strict which means higher qualitiy of the
+training data).
+
+For each test we used a neural network with two hidden
+layers, both with 64 artificial neurons.
+
+\begin{enumerate}
+
+  \item This test run was done with a less strict policy
+        toward our training data which means we took every
+        episode that generated a score of over 0 and
+        sanitized the episodes that had a score better than
+        -400.
+
+        Sanitation means we normalized every action's
+        single score and took only the actions with a score
+        better than 0.4 (we thought doing this we could
+        cut out the part where the agent loses control over
+        the ufo before crashing)
+
+        We had 9 Workers running on 9 different machines
+        and one Executor. Every Worker spawned 1 process
+        generating training data with the agent and 5
+        processes generating training data randomly.
+
+        Every process ran 1000 Episodes.
+
+        This test run was terminated after approximately
+        one hour.
+
+        \textbf{Observations:}
+
+        \begin{itemize}
+
+          \item 1000 Episodes were far too small. The
+                Workers flooded the data\_queue with
+                messages containing only a small amound of
+                data.
+
+          \item We discovered a very serious bottleneck.
+                The messages containing the training data
+                are formatted as a JSON string
+                representation of a Python list which is
+                parsed back into a list object when the
+                Executor's main process receives it.
+
+                But before training the list has to be
+                parsed again into a format our agent (cmp.
+                \ref{s_agent}) understands. The list
+                containing tuples with the observation and
+                the corresponding action has to be splitted
+                an parsed to a NumPy Array. This parsing is
+                very expensive and while doing the parsing
+                the Executioner's TTSL process holds the
+                shared list object (which means the main
+                process has to wait until the TTSL process
+                releases the list's mutex, which is one
+                reason why the data\_queue was so flooded).
+
+        \end{itemize}
+
+  \item This time we tried to conquer the issues we faced
+        in the first test run. We used the same policy
+        towards our training data but increased the amount
+        of episodes played by each process. Every process
+        doing generation randomly now did 10000 episodes
+        while the ones using the agent played 5000.
+
+        Also now we spawned 5 processes using the agent and
+        5 doing random actions.
+
+        To avoid the bottleneck this time we added another
+        Executor which roughly follows a reinforcement
+        lerning technique called Double Q-Learing and is
+        used to avoid overestimation for the training data
+        (the agent doing the same mistakes over and over,
+        because it trains with data it generated itself).
+        \cite{jonas1}
+
+        Both Executors are in a race condition for the next
+        training data and both provide every Worker with
+        its agent which we thought would lead to quality
+        training data while keeping the data\_queue small.
+
+        We terminated this test run after approximately
+        one and three quarters of an hour, after 11
+        iterations of the TTSL (both Executors). Both
+        Executors combined had over 60 million data points
+        and 40GB of more training data was still in the
+        data\_queue.
+
+        \textbf{Observations:}
+
+        \begin{itemize}
+
+          \item We only postponed the moment our
+                application would kill itself with too much
+                training data. Parsing again was too much.
+
+          \item Even though we had 60 million data points
+                the agents were not able to show much
+                progress. Not many test runs were able to
+                exceed -150 (200 being the score an episode
+                is played successfully).
+
+        \end{itemize}
+
+  \item After having again the problem of an overflowing
+        data\_queue and not much progress even after 11
+        iterations we tried a stricter policy. We took only
+        episodes which generated a score of over 100 and
+        sanitized the episodes which had a score over -50.
+
+        Again we used to Executors and 8 Workers, all on
+        different machines.
+
+        We terminated this test run after approximately 45
+        minutes, both Executors having more than 16 million
+        data points as their training data set.
+
+        \textbf{Observations:}
+
+        \begin{itemize}
+
+          \item At the first iterations we had some more
+                success (scores over 100 which we were
+                never able to reach before), but, at the
+                end, even though the Executors both had
+                16 million data points, all on episodes
+                with a score that had at least reached -50,
+                both agents settled for test results around
+                -150, like the two test runs before.
+
+                We were not able to increase the
+                performance of our agents.
+
+        \end{itemize}
+
+  \item We increased the strictness even more. We took only
+        episodes that generated a score better than 150 and
+        cut out the sanitation.
+
+        This time we used only one Executor and again 9
+        Workers.
+
+        Again we terminated after approximately 45 minutes,
+        again unsuccessful.
+
+        \textbf{Observations:}
+
+        \begin{itemize}
+
+          \item Before the workers can use the agent the
+                agent has to be trained with 100 percent
+                random generated data. Because the policy
+                was so strict the first 6 received
+                messages on the data\_queue were empty. The
+                seventh received message contained only 427
+                data points.
+
+          \item Like the third test run this test run had
+                even greater success at the beginning,
+                once actually reaching 200. But again, even
+                though only training with data better than
+                150 the agent settled at -150, only
+                occasionally getting a better result around
+                -50.
+
+        \end{itemize}
+
+\end{enumerate}
+
+So, while we were able to create a distributed application
+that uses a modern approach to concurrency and was able to
+crunch a lot of numbers in a small amount of time,
+unfortunately we were not able to build an agent that
+could master "LunarLander-v2".
+
+\subsection{Where to go, what to do next}
+
+There are some points we would like to add to our
+application in order to make it able to build an agent
+that is good enough for "LunarLander-v2".
+
+\begin{itemize}[label={}]
+
+  \item \textbf{Statistical methods for data sanitation and
+                a better agent:}
+
+        Since we wanted to build an application that
+        takes a task that takes a long time if done
+        not concurrently and make it fast, we never really
+        looked deeper into statistical methods from the
+        fields of artificial intelligence research and
+        data science that could have helped us build a
+        better agent or a better training data set.
+
+        We thought we could generate enough data to
+        outweigh the weaknesses our project shows when it
+        comes to optimization of agent or training data
+        set.
+
+        In the end our approach failed, so maybe by adding
+        some optimizations of the agent or the training
+        data set the application could be able to produce
+        an agent that is able to succeed.
+
+  \item \textbf{Some sort of load balancing:}
+
+        We had hughe troubles in two test cases with
+        an overflowing data\_queue.
+
+        Our static approach (playing the same amount of
+        episodes every iteration of the GSL (cmp.
+        \ref{s_worker}) did not work that well. At some
+        time the Workers start to overwhelm the
+        Executor(s).
+
+        To avoid this a unit doing load balancing should be
+        added to the application that supervises the
+        training data set generation using meta data from
+        the Executor and the RabbitMQ.
+
+  \item \textbf{Doing something with the parsing
+                bottlneck of the Executor:}
+
+        The parsing of the training data took longer than
+        the actual training (optimized by Tensorflow).
+
+        Right now the parsing is done in a single process
+        (the TTSL process (cmp. \ref{s_executor})), however
+        we think the parsing could be optimized using
+        a concurrent approach (e.g. worker processes like
+        we use for the data generation (cmp.
+        \ref{s_worker})).
+
+  \item \textbf{Optimize the protocolling unit:}
+
+        The problem with our current protocolling unit is,
+        that it only saves the protocol when the program
+        is finished successfully, which does not help when
+        failing (like we did).
+
+        The protocolling unit should safe the data more
+        often (e.g. could be integrated in the TTSL process
+        (cmp. \ref{s_executor}) or a new process only for
+        protocolling could be spawned).
+
+\end{itemize}
