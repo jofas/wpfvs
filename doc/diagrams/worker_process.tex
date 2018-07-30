@@ -1,0 +1,129 @@
+\begin{figure}[H]
+\begin{center}
+\begin{tikzpicture}
+
+  \UMLActivitySwimlane{GSL}{\linewidth/2}{\textheight-5cm}
+    {}
+  \UMLActivitySwimlane{main}{\linewidth/2}{\textheight-5cm}
+    {right=0 of TTSL}
+
+
+  \UMLActivityInitialNodeRelativeTo{above=.5 of main}
+
+
+  \UMLActivityConcurrentNodeHRelativeTo
+    {above=4 of main.west}
+    {c}
+    {12cm}
+
+
+  % main {{{
+	\UMLActivityStateRelativeToAlterName
+    {above=-3 of main}
+    {Initialize global shared variables and constants}
+    {init}
+    {text width=4cm}
+
+	\UMLActivityStateRelativeToAlterName
+    {below=1 of init}
+    {wait for environment}
+    {woe}
+    {text width=4cm}
+
+  \UMLActivityStateRelativeToAlterName
+    {below=3 of woe}
+    {Listening for new agent}
+    {lna}
+    {text width=4cm}
+
+  \UMLActivityCentralBufferRelativeToAlterName
+    {below=2 of lna}
+    {Agent}
+    {a}
+    {text width=4cm}
+
+  \UMLActivityStateRelativeToAlterName
+    {below=2 of a}
+    {Send protocol}
+    {sp}
+    {text width=4cm}
+
+  \UMLActivityExitNodeRelativeTo
+    {below=2 of sp}
+    {kill}
+
+  % }}}
+
+  % gsl {{{
+  \UMLActivityDescisionNodeRelativeTo
+    {above=-9 of GSL}
+    {d_g}
+
+  \UMLActivityStateRelativeToAlterName
+    {below=2 of d_g}
+    {Generating}
+    {g}
+    {text width=4cm}
+
+  \UMLActivityStateRelativeToAlterName
+    {below=2 of g}
+    {Sending}
+    {s}
+    {text width=4cm}
+  % }}}
+
+  % conns {{{
+  \UMLActivityControlFlow
+    {initial.east}{init}
+    {-|($(init.north)+(3.5,0.3)$)|-}
+
+	\UMLActivityControlFlow
+    {init.south}{woe}{--}
+
+	\UMLActivityControlFlow
+    {woe}{c.2}{|-($(woe)!.5!(c)$)-|}
+
+	\UMLActivityControlFlow
+    {c.358}{lna.north}{|-($(c)!.5!(lna)$)-|}
+
+	\UMLActivityControlFlowWithGuard
+    {lna.east}{sp.east}{-|($(lna.east)+(.5,-2)$)|-}
+    {Executioner sends done message}{.0}
+    {above right, text width=2cm}
+
+	\UMLActivityControlFlow
+    {sp}{kill}{--}
+
+  \UMLActivityControlFlow
+    {c.182}{d_g}{|-($(c)!.5!(d_g)$)-|}
+
+	\UMLActivityControlFlow
+    {d_g}{g}{--}
+
+	\UMLActivityControlFlow
+    {g}{s}{--}
+
+  \UMLActivityControlFlow
+    {s}{d_g}{-|($(s.west)-(.5,-2)$)|-}
+
+	\UMLActivityDataFlow
+    {lna.south}
+    {a.north}
+    {--}
+    {270}
+    {270}
+  \node[left] at ($(lna)!.5!(a)$)
+    {\tiny{[Executioner sends agent]}};
+
+  \UMLActivityDataFlow
+    {a.west}
+    {g.east}
+    {-|($(a)!.5!(g)$)|-}
+    {180}
+    {180}
+  % }}}
+\end{tikzpicture}
+\end{center}
+\caption{Activity diagram of the Worker}
+\end{figure}
+

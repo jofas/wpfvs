@@ -1,0 +1,89 @@
+\begin{figure}[H]
+\begin{center}
+\begin{tikzpicture}
+
+\node[rectangle split, rectangle split parts = 5,
+      rectangle split ignore empty parts=false,
+      rectangle split horizontal,
+      inner sep=11pt, draw, label=queue]
+  at (0,0) (queue) {};
+
+\node[circle,fill=red!25,left=9.5 of queue,label=publisher]
+  {P}
+  edge[->] (queue);
+
+\node[circle,fill=green!25,right=2 of queue,label=listener]
+  {L}
+  edge[<-] (queue);
+
+
+
+\node[rectangle split, rectangle split parts = 5,
+      rectangle split ignore empty parts=false,
+      rectangle split horizontal,
+      inner sep=11pt, draw]
+  at (0,-8) (queue_two) {};
+
+\node[rectangle split, rectangle split parts = 5,
+      rectangle split ignore empty parts=false,
+      rectangle split horizontal,
+      inner sep=11pt, draw, above=1.5 of queue_two]
+  (queue_one) {};
+
+\node[rectangle split, rectangle split parts = 5,
+      rectangle split ignore empty parts=false,
+      rectangle split horizontal,
+      inner sep=11pt, draw, above=1.5 of queue_one]
+  (queue_zero) {};
+
+\node[below=1 of queue_two] (queue_dots) {\vdots};
+
+\node[rectangle split, rectangle split parts = 5,
+      rectangle split ignore empty parts=false,
+      rectangle split horizontal,
+      inner sep=11pt, draw, below=1.5 of queue_dots]
+  (queue_n) {};
+
+
+\node[circle,fill=blue!25,left=6.5 of queue_two,
+      label=exchange]
+  (exchange) {E}
+  edge[->] (queue_two.west)
+  edge[->] (queue_one.west)
+  edge[->] (queue_zero.west)
+  edge[->] (queue_n.west);
+
+
+\node[circle,fill=red!25,left=2 of exchange,
+      label=publisher]
+  {P}
+  edge[->] (exchange);
+
+
+\node[circle,fill=green!25,right=2 of queue_two,
+      label=listener]
+  (l_two) {L$_2$}
+  edge[<-] (queue_two.east);
+
+\node[circle,fill=green!25,label=listener,
+      above=1.5 of l_two]
+  (l_one) {L$_1$}
+  edge[<-] (queue_one.east);
+
+\node[circle,fill=green!25,right=2 of queue,label=listener,
+      above=1.5 of l_one]
+  {L$_0$}
+  edge[<-] (queue_zero.east);
+
+\node[below=1 of l_two] (l_dots) {\vdots};
+
+\node[circle,fill=green!25,right=2 of queue,
+      label={below:listener},
+      below=1.5 of l_dots]
+  {L$_n$}
+  edge[<-] (queue_n.east);
+
+\end{tikzpicture}
+\end{center}
+\caption{Scheme of a queue and an exchange}
+\end{figure}

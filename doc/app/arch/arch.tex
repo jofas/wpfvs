@@ -1,0 +1,111 @@
+\subsection{Architecture}
+
+This chapter will describe in detail how our application
+is build, how it works and what we use to achieve
+concurrency.
+
+On a higher level our application is devided into two
+distinct parts, the Executor ($E$) and the Worker ($W$).
+
+$E$ is the part of our application that is doing the
+training and testing of our agent, while  $W$ generates
+training data which is sent via the RabbitMQ to $E$ so $E$
+can train the agent with this data. After training $E$
+sends the agent to $W$ so $W$ can generate new training
+data with the updated agent.
+
+This iteration is continued until the agent is able to
+solve the Gym environment (cmp. \ref{s_openai_gym}).
+
+\input{app/arch/network}
+
+\input{app/arch/executor}
+
+\input{app/arch/worker}
+
+\subsubsection{Queues and Exchanges}
+
+Now, this chapter will go more into detail on how we
+utilize the RabbitMQ.
+
+First, there are two concepts we used for communication
+with the RabbitMQ called queues and exchanges.
+
+\begin{itemize}[label={}]
+
+  \item \textbf{queue:}
+
+        This concept we already discussed in chapter
+        \ref{ss_mb_faa}. Now, for our project one property
+        of a queue is interesting, which is "first come,
+        first serve" or "FIFO" (First In, First Out), which
+        means once a message is received by a listener
+        (also called consumer), other listeners (consumers)
+        that subscribed to this particular queue will never
+        receive this message and all subscribed listeners
+        are in a race condition for the next message.
+
+        Because of this we need another concept for
+        distributing certain messages (e.g. sending our
+        agent to each Worker, since every Worker should use
+        a current version of the agent wich would not be
+        possible if a Executor would send the agent to a
+        queue, because then only one would receive the new
+        agent instead of all Workers).
+
+  \item \textbf{exchange:}
+
+        For the above mentioned szenario we need a
+        different message distribution called
+        publish/subscribe.
+
+        Publish/subscribe message distribution can be
+        achieved with an exchange provided by the RabbitMQ.
+
+        In this szenario the Executor would by the
+        publisher while the Workers would be the
+        subscribers. For every listener (subscriber)
+        RabbitMQ generates a new queue and redistributes
+        every message published to the exchange to the
+        queues.
+
+        For this redistribution or routing are some methods
+        available. We only used the method called fanout,
+        which generates a copy of every published message
+        for each listener (consumer) receiving on an
+        exchange.
+
+\end{itemize}
+
+\input{diagrams/queue_exchange}
+
+The queues and exchanges we used in our project:
+
+\begin{itemize}[label={}]
+
+  \item \textbf{meta\_queue:}
+
+        Queue the meta process of the Executor(s) is/are
+        listening to. This queue is used by Workers to
+        ask for the environment and for sending the
+        protocol once the agent succeeded.
+
+  \item \textbf{meta\_exchange:}
+
+        Corresponds to meta\_queue. The Executor(s) is/are
+        answering with the environment on this exchange.
+
+  \item \textbf{data\_queue:}
+
+        Queue used by the Workers to send their generated
+        training data to the Executor(s).
+
+  \item \textbf{model\_exchange:}
+
+        Exchange the Executor(s) use(s) for sending the new
+        agent to each Worker or, if the agent succeeded,
+        for sending a message telling each Worker to send
+        their protocols and shut down afterwards.
+
+\end{itemize}
+

@@ -1,0 +1,195 @@
+\begin{figure}[H]
+\begin{center}
+\begin{tikzpicture}
+
+  \UMLActivitySwimlane{TTSL}{\linewidth/3}{\textheight-5cm}
+    {}
+  \UMLActivitySwimlane{main}{\linewidth/3}{\textheight-5cm}
+    {right=0 of TTSL}
+  \UMLActivitySwimlane{meta}{\linewidth/3}{\textheight-5cm}
+    {right=0 of main}
+
+
+
+  \UMLActivityInitialNodeRelativeTo{above=.5 of main}
+
+
+  % main {{{
+	\UMLActivityStateRelativeToAlterName
+    {above=-3 of main}
+    {Initialize global shared variables and constants}
+    {init}
+    {text width=4cm}
+
+  \UMLActivityConcurrentNodeHRelativeTo
+    {below=1 of init}
+    {c}
+    {16cm}
+
+	\UMLActivityStateRelativeToAlterName
+    {below=1 of c}
+    {Listening for new training data}
+    {data}
+    {text width=4cm}
+
+  \UMLActivityCentralBufferRelativeToAlterName
+    {below=1 of data}
+    {Training data set}
+    {data_set}
+    {text width=4cm}
+  % }}}
+
+  % ttsl{{{
+  \UMLActivityDescisionNodeRelativeTo
+    {above=-6 of TTSL}
+    {d_tr}
+
+  \UMLActivityStateRelativeToAlterName
+    {below=1 of d_tr}
+    {Training}
+    {tr}
+    {text width=4cm}
+
+  \UMLActivityStateRelativeToAlterName
+    {below=1 of tr}
+    {Testing}
+    {te}
+    {text width=4cm}
+
+  \UMLActivityDescisionNodeRelativeTo
+    {below=1 of te}
+    {d_ttsl}
+
+  \UMLActivityStateRelativeToAlterName
+    {below=1 of d_ttsl}
+    {Send agent to Worker}
+    {saw}
+    {text width=4cm}
+
+  \UMLActivityStateRelativeToAlterName
+    {below=1 of saw}
+    {Send done message to Worker}
+    {sdmw}
+    {text width=4cm}
+
+  \UMLActivityStateRelativeToAlterName
+    {below=1 of sdmw}
+    {Write protocol to file}
+    {wptf}
+    {text width=4cm}
+
+  \UMLActivityExitNodeRelativeTo
+    {below=1 of wptf}
+    {kill}
+  % }}}
+
+  % meta {{{
+  \UMLActivityDescisionNodeRelativeTo
+    {above=-6 of meta}
+    {d_meta}
+
+  \UMLActivityStateRelativeToAlterName
+    {below=1 of d_meta}
+    {Listening to META\-QUEUE}
+    {lmq}
+    {text width=4cm}
+
+  \UMLActivityDescisionNodeRelativeTo
+    {below=1 of lmq}
+    {d_meta_one}
+
+  \UMLActivityStateRelativeToAlterName
+    {below=1 of d_meta_one}
+    {Send environment to Worker}
+    {sew}
+    {text width=4cm}
+
+  \UMLActivityStateRelativeToAlterName
+    {below=1 of sew}
+    {Add message to the protocol}
+    {mtp}
+    {text width=4cm}
+  % }}}
+
+  % conns {{{
+	\UMLActivityControlFlow
+    {initial.east}{init.north}
+    {-|(8,10)|-($(init.north)+(0,0.3)$)-|}
+
+	\UMLActivityControlFlow
+    {init.south}{c}{--}
+
+	\UMLActivityControlFlow
+    {c}{data}{--}
+
+  \UMLActivityControlFlow
+    {c.182}{d_tr}{|-($(c)!.5!(d_tr)$)-|}
+
+  \UMLActivityControlFlow
+    {c.358}{d_meta}{|-($(c)!.5!(d_meta)$)-|}
+
+	\UMLActivityControlFlow
+    {d_tr}{tr}{--}
+
+	\UMLActivityControlFlow
+    {tr}{te}{--}
+
+	\UMLActivityControlFlow
+    {te}{d_ttsl}{--}
+
+	\UMLActivityControlFlowWithGuard
+    {d_ttsl}{saw}{--}{Not successfull}{.5}{left}
+
+  \UMLActivityControlFlow
+    {saw}{d_tr}{-|($(saw.west)-(.2,-2)$)|-}
+
+	\UMLActivityControlFlowWithGuard
+    {d_ttsl}{sdmw}{-|($(sdmw.east)+(.2,2)$)|-}
+    {Successfull}{.0}{above right}
+
+	\UMLActivityControlFlow
+    {sdmw}{wptf}{--}
+
+	\UMLActivityControlFlow
+    {wptf}{kill}{--}
+
+	\UMLActivityControlFlow
+    {d_meta}{lmq}{--}
+
+	\UMLActivityControlFlowWithGuard
+    {lmq}{d_meta_one}{--}
+    {Incoming Message $m$}{.5}{right}
+
+	\UMLActivityControlFlowWithGuard
+    {d_meta_one}{sew}{--}
+    {$m$ contains 'env'}{.5}{right}
+
+	\UMLActivityControlFlowWithGuard
+    {d_meta_one}{mtp}{-|($(mtp.east)+(.2,2)$)|-}
+    {$m$ contains 'protocol'}{.0}{above right}
+
+	\UMLActivityControlFlow
+    {mtp}{d_meta}{-|($(mtp.west)-(.2,-2)$)|-}
+
+  \draw[blue] (sew.west) -- ($(sew.west)-(.2,0)$);
+
+	\UMLActivityDataFlow
+    {data.south}
+    {data_set.north}
+    {--}
+    {270}
+    {270}
+
+  \UMLActivityDataFlow
+    {data_set.west}
+    {tr.east}
+    {-|($(data_set)!.5!(tr)$)|-}
+    {180}
+    {180}
+
+  % }}}
+\end{tikzpicture}
+\end{center}
+\caption{Activity diagram of the Executor}
+\end{figure}
+

@@ -10,8 +10,11 @@ performance of algorithms."\cite{gym}
 OpenAI Gym is an easy to use and easy to integrate toolkit
 with a veriety of environments for reinforcement learning
 (RL) (cmp. \ref{ss_nn_nndrl}) which we used for training
-our agent.
+our agent. An environment can be a retro arcade game (used
+in our project) or some other complex task which the agent
+should master.
 
+\begin{figure}[H]
 \begin{mdframed}[style=codebox]
 \begin{lstlisting}[language=Python]
 # a small example program using OpenAI Gym
@@ -23,7 +26,8 @@ import random
 # ments can be found at: https://gym.openai.com/envs/
 environment = gym.make('LunarLander-v2')
 
-# the range of actions an agent can perform
+# the range of actions an agent can perform. As a mathemat-
+# ical set: [0..action_space[
 action_space = environment.action_space.n
 
 # mandatory first reset
@@ -34,8 +38,70 @@ environment.reset()
 action = random.randrange(0,action_space)
 
 # observations provided by the gym environment after
-# doing the random action in the environment
+# doing the random action in the environment.
 observation, reward, done, info = environment.step(action)
 
 \end{lstlisting}
 \end{mdframed}
+\caption{A small example program using OpenAI Gym}
+\end{figure}
+
+Important for further understanding of how we utilized gym
+is the concept of episodes. An episode is a finite sequence
+of actions performed on the environment which either
+concludes in solving the environment (reaching a specific
+score which is different for each environment) or failing,
+basically representing a game played.
+
+\begin{figure}[H]
+\begin{mdframed}[style=codebox]
+\begin{lstlisting}[language=Python]
+# example of an episode
+
+# if the episode reaches this score the episode is finished
+# successfully
+score_solved = 200
+
+# the score reached in this episode
+score = 0
+
+# perform the finite sequence of actions (terminated by
+# the environment)
+while True:
+
+  # generate random action (instead of predicted action
+  # from the agent)
+  action = random.randrange(0,action_space)
+
+  # observations provided by the gym environment after
+  # doing the random action in the environment
+  observation, reward, done, info = environment.step(action)
+
+  # add the reward from the action to the overall reached
+  # score of the episode
+  score += reward
+
+  # the done value provided by the environment is a Boolean
+  # which specifies if the episode is finished (either suc-
+  # cessfully or not)
+  if done:
+    if score == score_solved:
+      print("finished episode successfully!")
+    else:
+      print("failed episode!")
+
+    # reset environment after every episode (otherwise gym
+    # throws an exception when calling env.step, since the
+    # episode already terminated)
+    env.reset()
+
+    # return from episode loop
+    break
+\end{lstlisting}
+\end{mdframed}
+\caption{Example of an episode (game) played on an OpenAI
+  Gym environment}
+\end{figure}
+
+An agent has solved an environment if it succeeded $x$
+consecutive episodes. $x$ is provided by Gym.

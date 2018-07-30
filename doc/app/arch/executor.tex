@@ -1,0 +1,50 @@
+\subsubsection{Executor}
+\label{s_executor}
+
+The Executor $E$ is the part of the application that is
+doing the training and testing of our agent. Training and
+testing is done incrementally in a loop, the "TTSL"
+(Training-Testing-Sending-Loop). An Executor instance
+$E_i$ gets provided with its training data from the Worker
+instances $W_j$ it is connected to (via the RabbitMQ).
+
+If the testing part of the "TTSL" failed $E_i$ sends the
+newly trained agent to every $W_j$ (the sending part of the
+"TTSL"). Else if the testing was successful and the agent
+mastered the environment (cmp \ref{s_openai_gym}) it sends
+a message that testing was successful which kills every
+$W_j$.
+
+The Executor is composed of three processes, the main
+process, the meta process and the TTSL process.
+
+\begin{itemize}[label={}]
+
+  \item \textbf{main process:}
+
+        The main process first initializes global shared
+        variables and constants it shares with the other
+        two processes. Then it starts the meta process and
+        the TTSL process.
+
+        After that the main process becomes a listener
+        which listens for incoming data from the Worker
+        instances connected to the RabbitMQ. If new data
+        comes in it is saved in a shared variable so the
+        TTSL process can access it.
+
+  \item \textbf{TTSL process:}
+
+        The process executing the TTSL.
+
+  \item \textbf{meta process:}
+
+        This process is a listener (like main becomes after
+        initializing the shared memory and starting this
+        and the TTSL process) which listens to a queue
+        of the RabbitMQ so this Executor can communicate
+        with the Workers it is connected to.
+
+\end{itemize}
+
+\input{diagrams/executor_process}

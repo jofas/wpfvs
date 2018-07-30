@@ -1,0 +1,154 @@
+\subsubsection{Worker}
+
+The Worker $W$ is the part of the application that is
+generating the data set for training the agent. The
+generation of the training data set is the most expensive
+task when it comes to computational effort.
+
+While doing the generation $W$ is playing $x$ many episodes
+consecutively. $x$ is statically provided by us and is
+known at runtime. After finishing an episode the the score
+of this episode is decisive wether the episode is good
+enough for the training set, since the quality of the
+training data set is very crucial for the agent to succeed.
+
+Quality management is done statically with some constants
+(like $x$).
+
+Since generating training data is so expensive and can be
+done concurrently we use many processes controlled by a
+Python object called ProcessPoolExecutor from the
+concurrent.futures part of Python's standard library for
+this task.
+
+\begin{figure}[H]
+\begin{mdframed}[style=codebox]
+\begin{lstlisting}[language=Python]
+# a small example program using a ProcessPoolExecutor
+from concurrent import futures
+
+# this is executed by every process. Every process gets
+# an id (i) which is used as a factor for computing a power
+# sequence in the range(100*i,100*i+100)
+def power_sequence(i):
+  start  = 100*i
+  end    = start + 100
+  primes = []
+
+  for i in range(start, end):
+    primes += i**i
+
+  return primes
+
+# the list of powers
+powers = []
+
+# the ProcessPoolExecutor that starts 10 processes which
+# means a power sequence for range 0..999 is generated
+with futures.ProcessPoolExecutor(max_workers=10) as e:
+  # safe every process in fs
+  fs = [e.submit(power_sequence,i) for i in range(10)]
+
+  # await the return
+  for f in futures.as_completed(fs):
+    powers += f.result()
+
+print(powers)
+\end{lstlisting}
+\end{mdframed}
+\caption{A small example program using ProcessPoolExecutor}
+\end{figure}
+
+Concurrent, multiprocessing and thread are the parts of
+Python's standard library wich provide rich features for
+concurrent programming.
+
+While concurrent provides higher-level abstractions which
+are more easy to use, multithreading provides the more
+low-level, more powerful APIs for concurrent programming
+such as a standalone Process object, Locks (mutexes),
+Semaphores, Pipes, Queues or ProxyObjects
+(shared variables).
+
+We use multiprocessing for spawning standalone processes,
+sharing variables and for mutexes (synchronization between
+processes).
+
+
+Like the Executor (cmp. \ref{s_executor}) a Worker instance
+is composed of more than one process. But while an
+Executor needs three, a Worker needs only two processes.
+
+\begin{itemize}[label={}]
+
+  \item \textbf{main process:}
+
+        Like the Executor the Worker first initializes
+        some static or shared variables and constants.
+        But after the initialization part the worker has
+        to get some information first before continuing
+        execution.
+
+        Since the Worker should be able to run like a
+        daemon waiting for his task (provided by an
+        Executor) the Worker needs the information which
+        environment he should generate test data for.
+
+        This information is provided by an Executor
+        instance connected to the RabbitMQ. The Worker
+        sends periodically a message to a queue the
+        Executors meta process listens to. The Executor
+        instance than answers with the name of the
+        environment the Worker should use. The environment
+        is specified by us when starting the Executor via
+        its CLI.
+
+        While it is possible to connect many Executors to
+        the RabbitMQ, they all can only be started with
+        the same environment since otherwise corrupt data
+        will destroy any chance of success (we did not
+        implement a way to distinguish between different
+        environments using the same RabbitMQ).
+
+        After having the environment the main process can
+        continue.
+
+        The main process then starts the Worker's
+        generating unit called "GSL" (Generate-Send-Loop).
+        This is the loop corresponding to the Executors
+        "TTSL" unit.
+
+        Followed by that the main process becomes a
+        listener for a queue on the RabbitMQ. On that queue
+        the main process gets the new agent provided by an
+        Executor instance which is shared with the GSL
+        process or a message which says that the agent
+        succeeded. If that is the case the main process
+        answers with a protocol to the queue the meta
+        process of the Executor listens to and then kills
+        the GSL process and itself.
+
+  \item \textbf{GSL process:}
+
+        The GSL generates and sanitizes the test data
+        before sending it to the Executor. For that it uses
+        Python's above mentioned ProcessPoolExecutor.
+
+        Since the Worker is not provided with an agent yet
+        it generates the actions performed in every episode
+        played randomly.
+
+        After the first batch of training data the Executor
+        has processed, the Executor can send the first
+        version of its agent to the Worker which can use it
+        for generation afterwards.
+
+        It should be noted that the Worker not only uses
+        the agent for generating new training data but also
+        spawns some processes which generate training data
+        randomly so the agent does not start to make the
+        same mistakes over and over again.
+
+\end{itemize}
+
+\input{diagrams/worker_process.tex}
