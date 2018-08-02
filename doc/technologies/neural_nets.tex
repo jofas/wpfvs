@@ -1,4 +1,4 @@
-\subsection{Neural Nets}
+\subsection{Neural Networks}\index{Neural Network}
 
 % Derivation from biology {{{
 \subsubsection{Derivation from biology}
@@ -8,12 +8,12 @@
 gained in brain research on the interaction between nerve
 cells (neurons) and connections (synapses)".\cite{ct_math}
 
-Here, an artificial neuron mimics the functioning of a
-nerve cell . A biological nerve cell is connected to other
-nerve cells via synapses. At these connections, stimuli are
-transmitted by means of chemical messengers
-(neurotransmitters) and converted into an electrical signal
-within the nerve cell.
+Here, an artificial neuron\index{Neural Network!artificial
+ Neuron} mimics the functioning of a nerve cell. A
+biological nerve cell is connected to other nerve cells via
+synapses. At these connections, stimuli are transmitted by
+means of chemical messengers (neurotransmitters) and
+converted into an electrical signal within the nerve cell.
 
 The synapses of a nerve cell are located at so-called
 dendrites (branches), from which the transmitted stimuli
@@ -56,33 +56,37 @@ In an artificial neuron the following happens:
         continuous.\cite{nne_beck}
 
         If the data comes from other neurons, the weighting
-        of the connection is additionally transferred to
-        the value $\omega_i$ . Each connection of a neuron
-        has an individual weighting. The greater the value
+        \index{Neural Network!weighting} of the connection
+        is additionally transferred to the value
+        $\omega_i$. Each connection of a neuron has an
+        individual weighting. The greater the value
         of this weighting, the more important the
         transmitted value $x_i$ for the network output.
 
   \item The value and weight of each input connection is
         added by the transfer function $\sum_{i=1}^{n}w_ix_i$
         to calculate the net input value $t$.
+        \index{Neural Network!net input value}
 
 
   \item Every artificial neuron, like a nerve cell, has a
-        threshold. An artificial neuron is a value
-        $\theta$. The threshold $\theta$ is subtracted from
-        the net input value $t$ to determine the activation
+        threshold. An artificial neuron's threshold is a
+        value $\theta$\index{Neural Network!threshold}.
+        The threshold $\theta$ is subtracted from the net
+        input value $t$ to determine the activation
         potential of the neuron.
 
         The threshold can also be represented by the bias.
-        The bias is a further input, which transmits the
-        constant value 1 and as weighting the value
-        $b=-\theta$.
+        The bias\index{Neural Network!bias} is a further
+        input, which transmits the constant value 1 and as
+        weighting the value $b=-\theta$.
 
         \input{diagrams/neuron_bias}
 
   \item The determined value of $t-\theta$ is used as an
-        input in the activation function to determine the
-        output of the neuron.
+        input in the activation function $\varphi$ to
+        determine the output of the neuron.
+        \index{Neural Network!activation function}
 
         From this process, the basic elements of a neuron
         can be determined:
@@ -121,6 +125,7 @@ weighted input connections.
         network. It contains the same Number of neurons,
         such as input and output values in the test and
         learning data available.
+        \index{Neural Network!Layers!Input Layer}
 
   \item \textbf{Hidden layer:}
 
@@ -135,14 +140,17 @@ weighted input connections.
         the input. The weighting to the individual neurons
         of the hidden layer is determined, for example, by
         means of back propagation.
+        \index{Neural Network!Layers!Hidden Layer}
 
-  \item \textbf{Output-Layer:}
+  \item \textbf{Output Layer:}
 
         The output layer is the last layer of a neural
         network. It delivers the results of the network to
         the outside world. The number of neurons in the
         output layer equals the number of expected output
         values.
+        \index{Neural Network!Layers!Output Layer}
+
 
 \end{itemize}
 % }}}
@@ -194,6 +202,7 @@ Reinforcement learning (RL) is an area of machine learning,
 inspired by behaviorist psychology, concerned with how
 software agents ought to take actions in an environment so
 as to maximize some notion of cumulative reward.
+\index{Reinforcement Learning}
 
 The problem, due to its generality, is studied in many
 other disciplines, such as game theory, control theory,
@@ -264,6 +273,10 @@ approximate the function relating inputs to outputs, and
 their learning consists to finding the right coefficients,
 or weights, by iteratively adjusting those weights along
 gradients that promise less error.
+\index{Reinforcement Learning!agent}
+\index{Reinforcement Learning!reward}
+\index{Reinforcement Learning!action}
+\index{Reinforcement Learning!state (observation)}
 
 In reinforcement learning, convolutional networks can be
 used to recognize an agent's state; e.g.\ the screen that

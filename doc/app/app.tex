@@ -6,6 +6,7 @@ order to train our agent to master an OpenAI Gym
 Environment (cmp. \ref{s_openai_gym}). In this chapter we
 will document how we tried to achieve this goal with our
 distributed application.
+\index{Application}
 
 % }}}
 
@@ -19,6 +20,7 @@ distributed application.
 
 First, we started developing our application for a Gym
 (cmp. \ref{s_openai_gym}) environment called "CardPole-v1".
+\index{OpenAI Gym!environments!CardPole-v1}
 
 In this environment the agent learns how to balance a stick
 moving a board on wich this stick stands either right or
@@ -36,12 +38,13 @@ Intel Core 2 Duo processor (2.40 GHz) running OpenSuSE
 Leap 43. We needed an older Tensorflow version because the
 current version does not support this CPU anymore. Also
 Tensorflow was not able to utilize any GPU (Graphical
-Processing Unit), which means our developement environment
+Processing Unit), which means our development environment
 does not have much computing power to offer.
+\index{Application!development environment}
 
 The problem we faced with training an agent for
 "CardPole-v1" was that, running the program in our
-developement environment, we were able to build an agent
+development environment, we were able to build an agent
 that succeded this environment in at most three training
 loops (which overall took aproximately 5 minutes). This was
 achieved with running one Executor, the RabbitMQ and
@@ -49,6 +52,7 @@ between one and three Worker instances on the same device
 which does not offer great computing abilitites (especially
 compared to the operational environment (the cluster in
 Room 1.242 containing 10 Apple Mac Pros)).
+\index{Application!operational environment}
 
 Since it would not made much sense running benchmarks on
 the operational environment training an agent to master
@@ -57,6 +61,7 @@ the operational environment training an agent to master
 We decided we would take "LunarLander-v2", a Atari Arcade
 Game where the agent has to land an ufo safely inside a
 flagged area on the ground.
+\index{OpenAI Gym!environments!LunarLander-v2}
 
 \begin{figure}[H]
   \centering

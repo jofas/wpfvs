@@ -52,6 +52,7 @@ with the RabbitMQ called queues and exchanges.
         possible if a Executor would send the agent to a
         queue, because then only one would receive the new
         agent instead of all Workers).
+        \index{RabbitMQ!queue}
 
   \item \textbf{exchange:}
 
@@ -74,6 +75,7 @@ with the RabbitMQ called queues and exchanges.
         which generates a copy of every published message
         for each listener (consumer) receiving on an
         exchange.
+        \index{RabbitMQ!exchange}
 
 \end{itemize}
 
@@ -89,16 +91,19 @@ The queues and exchanges we used in our project:
         listening to. This queue is used by Workers to
         ask for the environment and for sending the
         protocol once the agent succeeded.
+        \index{Application!meta\_queue}
 
   \item \textbf{meta\_exchange:}
 
         Corresponds to meta\_queue. The Executor(s) is/are
         answering with the environment on this exchange.
+        \index{Application!meta\_exchange}
 
   \item \textbf{data\_queue:}
 
         Queue used by the Workers to send their generated
         training data to the Executor(s).
+        \index{Application!data\_queue}
 
   \item \textbf{model\_exchange:}
 
@@ -106,6 +111,7 @@ The queues and exchanges we used in our project:
         agent to each Worker or, if the agent succeeded,
         for sending a message telling each Worker to send
         their protocols and shut down afterwards.
+        \index{Application!model\_exchange}
 
 \end{itemize}
 

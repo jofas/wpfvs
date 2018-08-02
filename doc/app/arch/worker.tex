@@ -1,5 +1,6 @@
 \subsubsection{Worker}
 \label{s_worker}
+\index{Application!Worker}
 
 The Worker $W$ is the part of the application that is
 generating the data set for training the agent. The
@@ -21,6 +22,7 @@ done concurrently we use many processes controlled by a
 Python object called ProcessPoolExecutor from the
 concurrent.futures part of Python's standard library for
 this task.
+\index{ProcessPoolExecutor}
 
 \begin{figure}[H]
 \begin{mdframed}[style=codebox]
@@ -128,6 +130,7 @@ Executor needs three, a Worker needs only two processes.
         answers with a protocol to the queue the meta
         process of the Executor listens to and then kills
         the GSL process and itself.
+        \index{Application!Worker!main process}
 
   \item \textbf{GSL process:}
 
@@ -149,6 +152,7 @@ Executor needs three, a Worker needs only two processes.
         spawns some processes which generate training data
         randomly so the agent does not start to make the
         same mistakes over and over again.
+        \index{Application!Worker!GSL process}
 
 \end{itemize}
 

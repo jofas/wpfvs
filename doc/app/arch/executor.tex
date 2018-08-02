@@ -1,5 +1,6 @@
 \subsubsection{Executor}
 \label{s_executor}
+\index{Application!Executor}
 
 The Executor $E$ is the part of the application that is
 doing the training and testing of our agent. Training and
@@ -32,10 +33,12 @@ process, the meta process and the TTSL process.
         instances connected to the RabbitMQ. If new data
         comes in it is saved in a shared variable so the
         TTSL process can access it.
+        \index{Application!Executor!main process}
 
   \item \textbf{TTSL process:}
 
         The process executing the TTSL.
+        \index{Application!Executor!TTSL process}
 
   \item \textbf{meta process:}
 
@@ -44,6 +47,7 @@ process, the meta process and the TTSL process.
         and the TTSL process) which listens to a queue
         of the RabbitMQ so this Executor can communicate
         with the Workers it is connected to.
+        \index{Application!Executor!meta process}
 
 \end{itemize}
 
