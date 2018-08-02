@@ -36,12 +36,12 @@ from concurrent import futures
 def power_sequence(i):
   start  = 100*i
   end    = start + 100
-  primes = []
+  _powers = []
 
   for i in range(start, end):
-    primes += i**i
+    _powers += i**i
 
-  return primes
+  return _powers
 
 # the list of powers
 powers = []
@@ -76,7 +76,6 @@ Semaphores, Pipes, Queues or ProxyObjects
 We use multiprocessing for spawning standalone processes,
 sharing variables and for mutexes (synchronization between
 processes).
-
 
 Like the Executor (cmp. \ref{s_executor}) a Worker instance
 is composed of more than one process. But while an
